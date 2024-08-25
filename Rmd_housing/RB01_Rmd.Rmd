@@ -1,0 +1,50 @@
+---
+title: "R Bootcamp Project"
+author: "Carlos Leon"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Table of Contents
+1. [Introduction](#introduction)
+2. [Data Description](#data-description)
+3. [Data Preparation](#data-preparation)
+4. [Exploratory Data Analysis](#exploratory-data-analysis)
+5. [Modeling](#modeling)
+6. [Chapter of Choice](#chapter-of-choice)
+7. [Conclusion](#conclusion)
+
+# Introduction
+<a name="introduction"></a>
+
+*Provide a brief introduction to your project, including the objectives and any background information.*
+
+# Data Description
+<a name="data-description"></a>
+
+*Describe the datasets you are using, their sources, and any relevant information about the variables included.*
+
+# Data Preparation
+<a name="data-preparation"></a>
+
+*Detail the steps taken to clean and prepare the data for analysis. Include any data transformations, handling of missing values, and data merging.*
+
+# Exploratory Data Analysis
+<a name="exploratory-data-analysis"></a>
+
+*Provide visualizations and summary statistics that give an overview of the data. Discuss any patterns, trends, or interesting observations.*
+
+# Modeling
+<a name="modeling"></a>
+
+*Describe the modeling techniques you are using. Include any relevant code, and discuss the results of your models.*
+
+# Chapter of Choice
+<a name="chapter-of-choice"></a>
+
+*This section should showcase a method, package, or technique not covered in the main part of the course. Describe the chosen topic and demonstrate its application in your project.*
+
+# Conclusion
+<a name="conclusion"></a>
+
+*Summarize your findings, discuss the implications of your results, and consider any limitations of your analysis. Provide suggestions for future work or potential improvements.*

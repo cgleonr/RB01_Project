@@ -1,0 +1,9 @@
+FAOSTAT data on consumption per capita:
+https://www.fao.org/faostat/en/#data/FBS
+
+Life expectancy:
+https://apps.who.int/gho/data/node.main.688
+
+WHO Member States estimated deaths (,000) by age, cause and sex/
+WHO Member States age-standardized death rates
+https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death
