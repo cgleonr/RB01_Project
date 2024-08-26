@@ -4,8 +4,6 @@ library(tidyverse)
 library(dplyr)
 
 food_consumption <- read.csv("datasets/FAOSTAT_data_en_8-26-2024.csv")
-deathrates_by_country_2021 <- read_xlsx("datasets/ghe2021_deathrates_bycountry_asdr.xlsx", sheet = 7)
-deaths_by_country <- read_xlsx("datasets/ghe2021_deaths_bycountry_2021.xlsx")
 life_expectancy <- read.csv("datasets/Life Expectancy.csv")
 countries <- read.csv("datasets/country-capital-lat-long-population.csv")
 
@@ -20,4 +18,8 @@ colnames(combined_data)
 drop_list <-c("Domain.Code", "Domain", "Area.Code..M49.","Element.Code",
               "Item.Code..FBS.", "Year.Code", "Flag", "Flag.Description")
 
-df <- df[, !(names(df) %in% drop_list)]
+life_expectancy <- life_expectancy[,c("Countries, territories and areas", "Life.expectancy.at.birth..years.")]
+
+df <- combined_data[, !(names(combined_data) %in% drop_list)]
+df <- left_join(df, life_expectancy$)
+head(df)
