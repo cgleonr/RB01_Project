@@ -18,8 +18,21 @@ colnames(combined_data)
 drop_list <-c("Domain.Code", "Domain", "Area.Code..M49.","Element.Code",
               "Item.Code..FBS.", "Year.Code", "Flag", "Flag.Description")
 
-life_expectancy <- life_expectancy[,c("Countries, territories and areas", "Life.expectancy.at.birth..years.")]
-
 df <- combined_data[, !(names(combined_data) %in% drop_list)]
-df <- left_join(df, life_expectancy$)
+
+# clean up life_expectancy and merge to df
+le_df <- life_expectancy[, c("X", "X.1", "Life.expectancy.at.birth..years.")]
+colnames(le_df) <- c("Country", "Year", "Life.Expectancy")
+le_df <- le_df[-1,]
+le_df$Year <- as.integer(le_df$Year)
+rownames(le_df) <- NULL
+head(le_df)
+
+# keep the same years in both datasets
+df <- inner_join(df, le_df, by = c("Area"="Country", "Year"))
+df <- df[, !names(df) %in% c("Note")]
 head(df)
+
+df <- na.omit(df)
+
+write.csv(df, "clean_datasets/final_df.csv")
