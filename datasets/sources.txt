@@ -7,3 +7,6 @@ https://apps.who.int/gho/data/node.main.688
 WHO Member States estimated deaths (,000) by age, cause and sex/
 WHO Member States age-standardized death rates
 https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death
+
+Country Capital Lat/Lon list
+https://gist.github.com/ofou/df09a6834a8421b4f376c875194915c9#file-country-capital-lat-long-population-csv
