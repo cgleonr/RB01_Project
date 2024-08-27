@@ -41,6 +41,8 @@ df$Life.Expectancy <- as.numeric(df$Life.Expectancy)
 # Drop NA values
 df <- na.omit(df)
 
+names(df)[names(df) == "Area"] <- "Country"
+
 summary(df)
 dim(df)
 

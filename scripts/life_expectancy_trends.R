@@ -28,7 +28,7 @@ df_2019 <- df %>% filter(Year == 2019)
 
 # Remove duplicates and sort by Life.Expectancy
 df_2019_unique <- df_2019 %>% 
-  distinct(Area, .keep_all = TRUE) %>% 
+  distinct(Country, .keep_all = TRUE) %>% 
   arrange(desc(Life.Expectancy))
 df_2019_unique
 # Calculate the middle 10 indices
@@ -47,11 +47,11 @@ subset_df <- bind_rows(top_10, mid_10, bot_10)
 
 # Filter the original dataframe for the selected countries and years
 df_filtered <- df %>%
-  filter(Area %in% subset_df$Area, Year >= 2015, Year <= 2019) %>%
-  left_join(subset_df %>% select(Area, Category), by = "Area")
+  filter(Country %in% subset_df$Country, Year >= 2015, Year <= 2019) %>%
+  left_join(subset_df %>% select(Country, Category), by = "Country")
 
 
-ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Area)) +
+ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
   geom_line(size = 1) +
   geom_point() +
   labs(title = "Life Expectancy (2015-2019)", 
