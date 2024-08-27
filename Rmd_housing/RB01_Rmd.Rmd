@@ -1,6 +1,6 @@
 ---
-title: "R Bootcamp Project"
-author: "Carlos Leon"
+title: "Nutritional Habits and their Relationship to Longevity"
+author: "Carlos Leon, Kristian Zutter"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -13,15 +13,82 @@ output: html_document
 5. [Modeling](#modeling)
 6. [Chapter of Choice](#chapter-of-choice)
 7. [Conclusion](#conclusion)
+```{r setup, include=FALSE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(gganimate) # animates ggplots
+
+
+
+```
+```{r Data_Loading, cache=TRUE, include=FALSE}
+
+df <- read.csv("../clean_datasets/final_df.csv")
+
+# Filter only 2019 values
+df_2019 <- df %>% filter(Year == 2019)
+
+# Remove duplicates and sort by Life.Expectancy
+df_2019_unique <- df_2019 %>% 
+  distinct(Area, .keep_all = TRUE) %>% 
+  arrange(desc(Life.Expectancy))
+df_2019_unique
+# Calculate the middle 10 indices
+mid_start <- round(length(df_2019_unique[,1])/2 - 5)
+mid_end <- round(length(df_2019_unique[,1])/2 + 4)
+
+# Select top 10, middle 10, and bottom 10 countries
+top_10 <- df_2019_unique %>% slice(1:10) %>% mutate(Category = "Top")
+mid_10 <- df_2019_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid")
+mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
+bot_10 <- df_2019_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
+
+# Combine them into one dataframe
+subset_df <- bind_rows(top_10, mid_10, bot_10)
+
+
+# Filter the original dataframe for the selected countries and years
+df_filtered <- df %>%
+  filter(Area %in% subset_df$Area, Year >= 2015, Year <= 2019) %>%
+  left_join(subset_df %>% select(Area, Category), by = "Area")
+
+```
 
 # Introduction
 <a name="introduction"></a>
 
 *Provide a brief introduction to your project, including the objectives and any background information.*
 
-# Data Description
-<a name="data-description"></a>
+## Life Expectancy Categories {.tabset}
+### Top Countries
+```{r Top 10, echo=FALSE}
+# Display the top countries sorted by Life.Expectancy in descending order
+top_countries <- subset_df %>% 
+  filter(Category == "Top") %>% 
+  arrange(desc(Life.Expectancy))
 
+print(top_countries[,c("Area","Life.Expectancy")])
+```
+### Middle Countries
+```{r Middle 10, echo=FALSE}
+# Display the mid countries sorted by Life.Expectancy in descending order
+mid_countries <- subset_df %>% 
+  filter(Category == "Mid") %>% 
+  arrange(desc(Life.Expectancy))
+
+print(mid_countries[,c("Area","Life.Expectancy")])
+```
+### Bottom Countries
+```{r Bottom 10, echo=FALSE}
+# Display the bottom countries sorted by Life.Expectancy in descending order
+bot_countries <- subset_df %>% 
+  filter(Category == "Bot") %>% 
+  arrange(desc(Life.Expectancy))
+
+print(bot_countries[,c("Area","Life.Expectancy")])
+```
 *Describe the datasets you are using, their sources, and any relevant information about the variables included.*
 
 # Data Preparation

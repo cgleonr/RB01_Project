@@ -38,6 +38,7 @@ mid_end <- round(length(df_2019_unique[,1])/2 + 4)
 # Select top 10, middle 10, and bottom 10 countries
 top_10 <- df_2019_unique %>% slice(1:10) %>% mutate(Category = "Top")
 mid_10 <- df_2019_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid")
+mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
 bot_10 <- df_2019_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
 
 # Combine them into one dataframe
@@ -57,6 +58,9 @@ ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group =
        x = "Year", 
        y = "Life Expectancy") +
   theme_minimal() +
-  scale_color_manual(values = c("Top 10" = "blue", "Middle 10" = "green", "Bottom 10" = "red"))
+  scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
+
+
+
 
 
