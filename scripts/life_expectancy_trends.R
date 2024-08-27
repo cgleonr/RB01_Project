@@ -2,6 +2,9 @@
 # For Rmd Intro, could use an analysis of life expectancy trends around the world
 # Then propose to investigate its link to food
 
+# Import libraries and dataset
+library(ggplot2)
+library(dplyr)
 df <- read.csv("clean_datasets/final_df.csv")
 head(df)
 dim(df)
