@@ -28,11 +28,22 @@ le_df$Year <- as.integer(le_df$Year)
 rownames(le_df) <- NULL
 head(le_df)
 
-# keep the same years in both datasets
+# keep the same years in both datasets to have complete data
 df <- inner_join(df, le_df, by = c("Area"="Country", "Year"))
 df <- df[, !names(df) %in% c("Note")]
-head(df)
 
+# Life.Expectancy column has datatype "character" when it should be numeric
+summary(df)
+class(df$Life.Expectancy)
+# Convert to numeric
+df$Life.Expectancy <- as.numeric(df$Life.Expectancy)
+
+# Drop NA values
 df <- na.omit(df)
 
+summary(df)
+dim(df)
+
+
+# Save data of interest to new .csv file
 write.csv(df, "clean_datasets/final_df.csv")
