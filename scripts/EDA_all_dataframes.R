@@ -24,42 +24,40 @@ head(df)
 dim(df)
 
 # Filter only 2019 values
-df_2019 <- df %>% filter(Year == 2019)
+df_2021 <- df %>% filter(Year == 2021)
 
 # Remove duplicates and sort by Life.Expectancy
-df_2019_unique <- df_2019 %>% 
+df_2021_unique <- df_2021 %>% 
   distinct(Country, .keep_all = TRUE) %>% 
   arrange(desc(Life.Expectancy))
-df_2019_unique
+df_2021_unique
 # Calculate the middle 10 indices
-mid_start <- round(length(df_2019_unique[,1])/2 - 5)
-mid_end <- round(length(df_2019_unique[,1])/2 + 4)
+mid_start <- round(length(df_2021_unique[,1])/2 - 5)
+mid_end <- round(length(df_2021_unique[,1])/2 + 5)
 
 # Select top 10, middle 10, and bottom 10 countries
-top_10 <- df_2019_unique %>% slice(1:10) %>% mutate(Category = "Top")
-mid_10 <- df_2019_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid")
-mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
-bot_10 <- df_2019_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
+top_10 <- df_2021_unique %>% slice(1:10) %>% mutate(Category = "Top")
+mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid") %>% slice(-9)
+#mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
+bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
 
 # Combine them into one dataframe
 subset_df <- bind_rows(top_10, mid_10, bot_10)
 
-
 # Filter the original dataframe for the selected countries and years
 df_filtered <- df %>%
-  filter(Country %in% subset_df$Country, Year >= 2015, Year <= 2019) %>%
+  filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
   left_join(subset_df %>% select(Country, Category), by = "Country")
 
 
 ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
   geom_line(size = 1) +
   geom_point() +
-  labs(title = "Life Expectancy (2015-2019)", 
+  labs(title = "Life Expectancy (2010-2021)", 
        x = "Year", 
        y = "Life Expectancy") +
   theme_minimal() +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
-
 
 
 #################################################################################
@@ -67,7 +65,7 @@ ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group =
 # df - raw, cleaned dataframe
 head(df)
 # df_2019 - only values from 2019 (subset df)
-head(df_2019)
+head(df_2021)
 # focus_df - has top, middle and bottom 10 countries, all rows, all cols
 head(focus_df)
 # total_caloric_intake - total caloric intake for focus countries in 2015, 2019
@@ -82,14 +80,10 @@ head(merged_cal_longevity_df)
 head(unique_cal_long_df)
 # difference_kcal_LE - difference in cal intake and longevity (2019 - 2015)
 head(difference_kcal_LE)
-# caloric_sources_2015 - all caloric sources from focus group, 2015 (kcal)
-head(caloric_sources_2015)
-# caloric_sources_2019 - all caloric sources from focus group, 2019 (kcal)
-head(caloric_sources_2019)
-# macro_sources_2015 - protein & fat sources from focus group, 2015 (grams)
-head(macro_sources_2015)
-# macro_sources_2019 - protein & fat sources from focus group, 2019 (grams)
-head(macro_sources_2019)
+# caloric_sources_2015 - all caloric sources from focus group, {year} (kcal)
+head(caloric_sources_{year})
+# macro_sources_2015 - protein & fat sources from focus group, {year} (grams)
+head(macro_sources_{year})
 ################################################################################
 # Load in DF
 df <- read.csv("clean_datasets/final_df.csv")
@@ -97,31 +91,31 @@ df <- read.csv("clean_datasets/final_df.csv")
 df <- df[ , !names(df) %in% c("X")]
 
 # Filter only 2019 values
-df_2019 <- df %>% filter(Year == 2019)
-head(df_2019)
+df_2021 <- df %>% filter(Year == 2019)
+head(df_2021)
 
 # Remove duplicates and sort by Life.Expectancy
-df_2019_unique <- df_2019 %>% 
+df_2021_unique <- df_2021 %>% 
   distinct(Country, .keep_all = TRUE) %>% 
   arrange(desc(Life.Expectancy))
-head(df_2019_unique)
+head(df_2021_unique)
 
 # Calculate the middle indices
-mid_start <- round(length(df_2019_unique[,1])/2 - 5)
-mid_end <- round(length(df_2019_unique[,1])/2 + 4)
+mid_start <- round(length(df_2021_unique[,1])/2 - 5)
+mid_end <- round(length(df_2021_unique[,1])/2 + 5)
 
 # Select top 10, middle 10, and bottom 10 countries
-top_10 <- df_2019_unique %>% slice(1:10) %>% mutate(Category = "Top")
-mid_10 <- df_2019_unique %>% slice(mid_start:mid_end) %>% 
+top_10 <- df_2021_unique %>% slice(1:10) %>% mutate(Category = "Top")
+mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>% 
   mutate(Category = "Mid") %>% slice(-9) # Picks 11, #9 has error
-bot_10 <- df_2019_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
+bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
 
 # Combine them into one dataframe
 focus_df <- bind_rows(top_10, mid_10, bot_10) # Holds top, mid bot 10
 
 # now holds all data for top, mid, bot 10
 focus_df <- df %>%
-  filter(Country %in% focus_df$Country, Year >= 2015, Year <= 2019) %>%
+  filter(Country %in% focus_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
   left_join(focus_df %>% select(Country, Category), by = "Country")
 
 # Filter the dataset for total caloric intake
@@ -195,7 +189,7 @@ macro_sources_2019 <- focus_df %>%
 ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
   geom_line(size = 1) +
   geom_point() +
-  labs(title = "Life Expectancy (2015-2019)", 
+  labs(title = "Life Expectancy (2010-2021)", 
        x = "Year", 
        y = "Life Expectancy (years)") +
   theme_minimal() +
@@ -235,4 +229,19 @@ ggplot(focus_bot, aes(x=Year, y=Total.Calories)) +
     labs(title = "Change in Caloric Intake for Bottom 10 Countries(2015-2020)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
+    
+# Plot 4 - All together
+ggplot(focus_df, aes(x = Year, y = Total.Calories, color = Category, group = Country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, aes(group = Category)) +  # Add regression lines for each Category
+  labs(title = "Trends in Caloric Intake (2015-2020)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red")) +  # Optional: set custom colors
+  theme_minimal()
 
+# Plot 5 - Stacked Bars for total cals from proteins, fats, other (carbs), 2015 vs 2019, groups
+
+# Plot 6 - Stacked bars for grams proteins, fats
+
+# Plot 7 - Stacked Bars for plant-based vs animal sources
