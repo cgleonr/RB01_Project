@@ -78,7 +78,7 @@ head(total_caloric_intake)
 head(merged_cal_longevity_df)
 # unique_cal_long_df - like merged_cal_longevity_df, but one entry per year
 head(unique_cal_long_df)
-# difference_kcal_LE - difference in cal intake and longevity (2019 - 2015)
+# difference_kcal_LE - yearly difference in cal intake and longevity (2019 - 2015)
 head(difference_kcal_LE)
 # caloric_sources_2015 - all caloric sources from focus group, {year} (kcal)
 head(caloric_sources_{year})
@@ -137,48 +137,44 @@ unique_cal_long_df <- merged_cal_longevity_df %>%
 
 # Calculating differences in cal intake and LE
 difference_kcal_LE <- unique_cal_long_df %>%
+  arrange(Country, Year) %>%  # Ensure data is ordered by Country and Year
   group_by(Country) %>%
-  reframe(
-    Caloric.Intake.Diff = Total.Calories[Year == 2019] - Total.Calories[Year == 2015],
-    Life.Expectancy.Diff = Life.Expectancy[Year == 2019] - Life.Expectancy[Year == 2015]
-  )
+  mutate(
+    Caloric.Intake.Diff = Total.Calories - lag(Total.Calories),
+    Life.Expectancy.Diff = Life.Expectancy - lag(Life.Expectancy)
+  ) %>%
+  ungroup()
 
+# View the result
+head(difference_kcal_LE)
 
 # Select the 'Country' and 'Category' columns
 category_data <- focus_df %>% 
   select(Country, Category) %>% 
   distinct()
+head(category_data)
+
+# deselect repeated columns
+diff_kcal_LE_selected <- difference_kcal_LE %>% 
+  select(-Life.Expectancy)
 
 # Merge the category information into difference_data
 focus_df <- focus_df %>%
-  left_join(difference_kcal_LE, by = "Country")
-head(focus_df)
-
-# add total kcal intake to focus_df
-focus_df <- focus_df %>% 
-  left_join(total_caloric_intake, by=c("Country","Year"))
+  left_join(diff_kcal_LE_selected, by = c("Country","Year"))
 head(focus_df)
 
 # Up to this point, focus_df has all columns except total calories, since the calories are all together.
 # We can try to get only the rows under Food which are:
 # Food supply (kcal/capita/day), to see caloric sources, and the same for grams.
 
-# Filter for caloric sources 2015
-caloric_sources_2015 <- focus_df %>%
-  filter(Element == "Food supply (kcal/capita/day)" & Year == 2015)
-# 2019
-caloric_sources_2019 <- focus_df %>%
-  filter(Element == "Food supply (kcal/capita/day)" & Year == 2019)
-head(caloric_sources_2019)
+# Filter for caloric sources 
+caloric_sources <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)")
 
 # Filter for macro grams sources 2015
 macro_sources_2015 <- focus_df %>%
   filter(Element == c("Protein supply quantity (g/capita/day)",
-                      "Fat supply quantity (g/capita/day)") & Year == 2015)
-# 2019
-macro_sources_2019 <- focus_df %>%
-  filter(Element == c("Protein supply quantity (g/capita/day)",
-                      "Fat supply quantity (g/capita/day)") & Year == 2019)
+                      "Fat supply quantity (g/capita/day)"))
 
 
 ################################################################################
@@ -195,11 +191,11 @@ ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Co
   theme_minimal() +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
 
-# Plot 2 - Focus group's caloric intake trends 2015-2019
+# Plot 2 - Focus group's caloric intake trends 2010-2021
 ggplot(focus_df, aes(x=Year, y=Total.Calories, colour = Category, group = Country)) +
   geom_line(size=1) +  
   geom_point() +
-  labs(title = "Change in Caloric Intake (2015-2020)",
+  labs(title = "Change in Caloric Intake (2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
 
@@ -208,7 +204,7 @@ focus_top <- focus_df %>% filter(Category == "Top")
 ggplot(focus_top, aes(x=Year, y=Total.Calories)) +
   geom_point() +
     geom_smooth(method = "lm", se = FALSE, color = "blue")
-    labs(title = "Change in Caloric Intake for Top 10 Countries(2015-2020)",
+    labs(title = "Change in Caloric Intake for Top 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
 
@@ -217,7 +213,7 @@ focus_mid <- focus_df %>% filter(Category == "Mid")
 ggplot(focus_mid, aes(x=Year, y=Total.Calories)) +
   geom_point() +
     geom_smooth(method = "lm", se = FALSE, color = "green")
-    labs(title = "Change in Caloric Intake for Middle 10 Countries(2015-2020)",
+    labs(title = "Change in Caloric Intake for Middle 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
 
@@ -226,7 +222,7 @@ focus_bot <- focus_df %>% filter(Category == "Bot")
 ggplot(focus_bot, aes(x=Year, y=Total.Calories)) +
   geom_point() +
     geom_smooth(method = "lm", se = FALSE, color = "red")
-    labs(title = "Change in Caloric Intake for Bottom 10 Countries(2015-2020)",
+    labs(title = "Change in Caloric Intake for Bottom 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
     
@@ -234,7 +230,7 @@ ggplot(focus_bot, aes(x=Year, y=Total.Calories)) +
 ggplot(focus_df, aes(x = Year, y = Total.Calories, color = Category, group = Country)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, aes(group = Category)) +  # Add regression lines for each Category
-  labs(title = "Trends in Caloric Intake (2015-2020)",
+  labs(title = "Trends in Caloric Intake (2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)") +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red")) +  # Optional: set custom colors
