@@ -318,26 +318,30 @@ map <- leaflet() %>%
     #Top countries Layer
   addCircleMarkers(data = top_10,
                    ~Longitude, ~Latitude,
-                   color = 'blue',
-                   label = ~paste("Country:", Country, "<br>"),
+                   color = '#009E73',
+                   label = ~paste("Country:", Country, "<br>",
+                                  "Life Expectancy:", top_10$Life.Expectancy, "years", "<br>",
+                                  "Caloric Intake:", top_10$Value, "kcal"),
                    group = "Top 10") %>%
     #Mid countries layer
   addCircleMarkers(data = mid_10, 
                    ~Longitude, ~Latitude, 
-                   color = 'green', 
-                   label = ~paste("Country:", Country, "<br>"),
+                   color = '#56B4E9', 
+                   label = ~paste("Country:", Country),
                    group = "Mid 10") %>%
     #Bot Countries Layer
   addCircleMarkers(data = bot_10, 
                    ~Longitude, ~Latitude, 
-                   color = 'red', 
-                   label = ~paste("Country:", Country, "<br>"),
+                   color = '#D55E00', 
+                   label = ~paste("Country:", Country),
                    group = "Bottom 10") %>%
   
     #layers control
 addLayersControl(
-    overlayGroups = c("Top 10", "Mid 10", "Bottom 10"),
+    overlayGroups = c("Top 10", "Middle 10", "Bottom 10"),
     options = layersControlOptions(collapsed = FALSE)
   )
 
 map
+
+
