@@ -17,7 +17,9 @@
 
 library(ggplot2)
 library(dplyr)
+library(plotly) # for interactive plots
 library(gganimate) # animates ggplots
+
 
 df <- read.csv("clean_datasets/final_df.csv")
 head(df)
@@ -49,7 +51,7 @@ df_filtered <- df %>%
   filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
   left_join(subset_df %>% select(Country, Category), by = "Country")
 
-
+# Plot Life expectancy development of the top, mid and bottom 10 countries
 ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
   geom_line(size = 1) +
   geom_point() +
@@ -58,6 +60,21 @@ ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group =
        y = "Life Expectancy") +
   theme_minimal() +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
+
+
+# Plot Life expectancy development of the top, mid and bottom 10 countries - interactive
+int_plot_life_exp <- ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country, text = Country)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(title = "Life Expectancy (2010-2021)", 
+       x = "Year", 
+       y = "Life Expectancy") +
+  theme_minimal() +
+  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00"))  # HEX codes
+
+int_plot_life_exp_display <- ggplotly(int_plot_life_exp, tooltip = "text")
+
+int_plot_life_exp_display
 
 
 #################################################################################
