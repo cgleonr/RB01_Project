@@ -14,11 +14,15 @@
 # - How does the macronutrient balance relate to caloric intake?
 #   - High protein vs. high carb diets and caloric intake vs food volume
 # - Are plant-based diets conducive to longer lives vs including animal foods?
-
+install.packages(c("ggplot2", "dplyr", "sf", "leaflet"))
 library(ggplot2)
 library(dplyr)
 library(plotly) # for interactive plots
 library(gganimate) # animates ggplots
+library(maptiles) # for maps
+library(sf) # for maps
+library(tidyterra) # for maps
+library(leaflet) # for hovering over the map
 
 
 df <- read.csv("clean_datasets/final_df.csv")
@@ -60,22 +64,6 @@ ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group =
        y = "Life Expectancy") +
   theme_minimal() +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
-
-
-# Plot Life expectancy development of the top, mid and bottom 10 countries - interactive
-int_plot_life_exp <- ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country, text = Country)) +
-  geom_line(size = 1) +
-  geom_point() +
-  labs(title = "Life Expectancy (2010-2021)", 
-       x = "Year", 
-       y = "Life Expectancy") +
-  theme_minimal() +
-  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00"))  # HEX codes
-
-int_plot_life_exp_display <- ggplotly(int_plot_life_exp, tooltip = "text")
-
-int_plot_life_exp_display
-
 
 #################################################################################
 # Creating the Dataframes:
@@ -208,6 +196,21 @@ ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Co
   theme_minimal() +
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
 
+# Plot 1.1 - Change in Life Expectancy from 2015 - 2019, focus countries - interactive
+int_plot_life_exp <- ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Country, text = Country)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(title = "Life Expectancy (2010-2021)", 
+       x = "Year", 
+       y = "Life Expectancy (years)") +
+  theme_minimal() +
+  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00"))
+
+int_plot_life_exp_display <- ggplotly(int_plot_life_exp, tooltip = "text")
+
+int_plot_life_exp_display
+
+
 # Plot 2 - Focus group's caloric intake trends 2010-2021
 ggplot(focus_df, aes(x=Year, y=Total.Calories, colour = Category, group = Country)) +
   geom_line(size=1) +  
@@ -215,6 +218,20 @@ ggplot(focus_df, aes(x=Year, y=Total.Calories, colour = Category, group = Countr
   labs(title = "Change in Caloric Intake (2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
+
+# Plot 2.1 - Focus group's caloric intake trends 2010 - 2021, interactive
+int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, colour = Category, group = Country, text = Country)) +
+  geom_line(size = 1) +  
+  geom_point() +
+  labs(title = "Change in Caloric Intake (2010-2021)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  theme_minimal() +
+  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00"))
+
+int_plot_caloric_intake_display <- ggplotly(int_plot_caloric_intake, tooltip = "text")
+
+int_plot_caloric_intake_display
 
 # Plot 3(a) - Top group kcal Trends
 focus_top <- focus_df %>% filter(Category == "Top")
@@ -224,6 +241,22 @@ ggplot(focus_top, aes(x=Year, y=Total.Calories)) +
     labs(title = "Change in Caloric Intake for Top 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
+
+# Plot 3(a.a) - Top group kcal Trends - colour coded and interactive
+    # I would go with a plot with all three groups together
+focus_top <- focus_df %>% filter(Category == "Top")
+
+int_plot_caloric_intake_mid <- ggplot(focus_top, aes(x = Year, y = Total.Calories, text = Country)) +
+      geom_line(aes(group = Country), color = "#009E73", size = 1) +  # Connect dots with lines, set color to green
+      geom_point(color = "#009E73", size = 2) +  # Points colored with HEX code #009E73
+      labs(title = "Change in Caloric Intake for Middle 10 Countries (2010 - 2021)",  # Updated title
+           x = "Year",  # Updated x-axis label
+           y = "Average Daily Intake (kcal)") +  # Updated y-axis label
+      theme_minimal()
+    
+int_plot_caloric_intake_mid_display <- ggplotly(int_plot_caloric_intake_mid, tooltip = "text")
+    
+int_plot_caloric_intake_mid_display
 
 # Plot 3(b) - Middle group kcal Trends
 focus_mid <- focus_df %>% filter(Category == "Mid")
@@ -253,8 +286,58 @@ ggplot(focus_df, aes(x = Year, y = Total.Calories, color = Category, group = Cou
   scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red")) +  # Optional: set custom colors
   theme_minimal()
 
+# Plot 4.1 - All together Interactive, colours adjusted
+int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, color = Category, group = Country, text = Country)) +
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE, aes(group = Category), size = 1.5) +  # Thicker regression lines for each Category
+  labs(title = "Trends in Caloric Intake (2010-2021)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00")) +  # Apply specified HEX colors
+  theme_minimal()
+
+int_plot_caloric_intake_display <- ggplotly(int_plot_caloric_intake, tooltip = "text")
+
+int_plot_caloric_intake_display
+
 # Plot 5 - Stacked Bars for total cals from proteins, fats, other (carbs), 2015 vs 2019, groups
 
 # Plot 6 - Stacked bars for grams proteins, fats
 
 # Plot 7 - Stacked Bars for plant-based vs animal sources
+
+# Plot 9 - Map with the countries top, mid, bot. colour coded for group. interactive with average caloric daily intake
+  ## creating a simple feature object
+sf_data <- st_as_sf(df, coords=c("Longitude", "Latitude"), crs = 4326)
+  
+## plotting the base map
+    #Create leaflet map
+map <- leaflet() %>%
+  addTiles() %>%
+  
+    #Top countries Layer
+  addCircleMarkers(data = top_10,
+                   ~Longitude, ~Latitude,
+                   color = 'blue',
+                   label = ~paste("Country:", Country, "<br>"),
+                   group = "Top 10") %>%
+    #Mid countries layer
+  addCircleMarkers(data = mid_10, 
+                   ~Longitude, ~Latitude, 
+                   color = 'green', 
+                   label = ~paste("Country:", Country, "<br>"),
+                   group = "Mid 10") %>%
+    #Bot Countries Layer
+  addCircleMarkers(data = bot_10, 
+                   ~Longitude, ~Latitude, 
+                   color = 'red', 
+                   label = ~paste("Country:", Country, "<br>"),
+                   group = "Bottom 10") %>%
+  
+    #layers control
+addLayersControl(
+    overlayGroups = c("Top 10", "Mid 10", "Bottom 10"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+map
