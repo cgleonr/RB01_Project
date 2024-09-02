@@ -46,6 +46,7 @@ difference_data <- unique_data %>%
     Life_Expectancy_Diff = Life.Expectancy[Year == 2019] - Life.Expectancy[Year == 2015]
   )
 
+difference_data
 
 # Assuming subset_df contains the 'Country' and 'Category' columns
 category_data <- subset_df %>% 

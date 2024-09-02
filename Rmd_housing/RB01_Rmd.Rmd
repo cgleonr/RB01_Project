@@ -109,6 +109,9 @@ subset_df <- subset_df %>%
 
 *Describe the datasets you are using, their sources, and any relevant information about the variables included.*
 
+# Theoretical Focus
+<a name="theoretical-focus"></a>
+
 # Data Preparation
 <a name="data-preparation"></a>
 
