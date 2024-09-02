@@ -14,53 +14,23 @@
 # - How does the macronutrient balance relate to caloric intake?
 #   - High protein vs. high carb diets and caloric intake vs food volume
 # - Are plant-based diets conducive to longer lives vs including animal foods?
-
+################################################################################
+#Libraries
+################################################################################
 library(ggplot2)
 library(dplyr)
 library(gganimate) # animates ggplots
+library(fmsb)
 
-df <- read.csv("clean_datasets/final_df.csv")
-head(df)
-dim(df)
+# Colors
+color_top <- "blue"
+color_mid <- "green"
+color_bot <- "red"
 
-# Filter only 2019 values
-df_2021 <- df %>% filter(Year == 2021)
-
-# Remove duplicates and sort by Life.Expectancy
-df_2021_unique <- df_2021 %>% 
-  distinct(Country, .keep_all = TRUE) %>% 
-  arrange(desc(Life.Expectancy))
-df_2021_unique
-# Calculate the middle 10 indices
-mid_start <- round(length(df_2021_unique[,1])/2 - 5)
-mid_end <- round(length(df_2021_unique[,1])/2 + 5)
-
-# Select top 10, middle 10, and bottom 10 countries
-top_10 <- df_2021_unique %>% slice(1:10) %>% mutate(Category = "Top")
-mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid") %>% slice(-9)
-#mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
-bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
-
-# Combine them into one dataframe
-subset_df <- bind_rows(top_10, mid_10, bot_10)
-
-# Filter the original dataframe for the selected countries and years
-df_filtered <- df %>%
-  filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
-  left_join(subset_df %>% select(Country, Category), by = "Country")
-
-
-ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
-  geom_line(size = 1) +
-  geom_point() +
-  labs(title = "Life Expectancy (2010-2021)", 
-       x = "Year", 
-       y = "Life Expectancy") +
-  theme_minimal() +
-  scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
-
-
-#################################################################################
+color_protein <- "darkred"
+color_fats <- "yellow3"
+color_cals <- "purple1"
+################################################################################
 # Creating the Dataframes:
 # df - raw, cleaned dataframe
 head(df)
@@ -81,9 +51,13 @@ head(unique_cal_long_df)
 # difference_kcal_LE - yearly difference in cal intake and longevity (2019 - 2015)
 head(difference_kcal_LE)
 # caloric_sources_2015 - all caloric sources from focus group, {year} (kcal)
-head(caloric_sources_{year})
+head(caloric_sources)
 # macro_sources_2015 - protein & fat sources from focus group, {year} (grams)
-head(macro_sources_{year})
+head(macro_sources)
+# macro_df - a calculation of calories from fats and proteins
+head(macro_df)
+# avg_macro_by_group - an average of calories by macro, pero country in focus group
+head(avg_macro_by_group)
 ################################################################################
 # Load in DF
 df <- read.csv("clean_datasets/final_df.csv")
@@ -172,13 +146,47 @@ caloric_sources <- focus_df %>%
   filter(Element == "Food supply (kcal/capita/day)")
 
 # Filter for macro grams sources 2015
-macro_sources_2015 <- focus_df %>%
+macro_sources <- focus_df %>%
   filter(Element == c("Protein supply quantity (g/capita/day)",
                       "Fat supply quantity (g/capita/day)"))
 
+# Filter the dataframe for relevant elements (Protein, Fat, and Total Calories)
+macro_df <- focus_df %>%
+  filter(Element %in% c("Protein supply quantity (g/capita/day)", 
+                        "Fat supply quantity (g/capita/day)", 
+                        "Food supply (kcal/capita/day)"))  # Total calories
+
+# Convert protein and fat values to calories
+macro_df <- macro_df %>%
+  mutate(Calories = case_when(
+    Element == "Protein supply quantity (g/capita/day)" ~ Value * 4,
+    Element == "Fat supply quantity (g/capita/day)" ~ Value * 9,
+    Element == "Food supply (kcal/capita/day)" ~ Value
+  ))
+
+head(macro_df)
+
+avg_macro_by_group <- macro_df %>%
+  group_by(Year, Category, Element) %>%
+  summarize(Average_Calories = mean(Calories, na.rm = TRUE)) %>%
+  ungroup()
+head(avg_macro_by_group)
+
+focus_df <- focus_df %>%
+  mutate(Category = factor(Category, levels = c("Top", "Mid", "Bot"),
+                           labels = c("Top", "Middle", "Bottom")))
+macro_df <- macro_df %>%
+  mutate(Category = factor(Category, levels = c("Top", "Mid", "Bot"),
+                           labels = c("Top", "Middle", "Bottom")))
+mean_life_exp <- focus_df %>%
+  filter(Year == 2021) %>%
+  group_by(Country, Category) %>%
+  summarize(Mean_Life_Expectancy = mean(Life.Expectancy, na.rm = TRUE)) %>%
+  ungroup()
+
 
 ################################################################################
-# Visuals
+# Freeform Visuals
 ################################################################################
 
 # Plot 1 - Change in Life Expectancy from 2015-2019, focus countries
@@ -189,7 +197,7 @@ ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Co
        x = "Year", 
        y = "Life Expectancy (years)") +
   theme_minimal() +
-  scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red"))
+  scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot))
 
 # Plot 2 - Focus group's caloric intake trends 2010-2021
 ggplot(focus_df, aes(x=Year, y=Total.Calories, colour = Category, group = Country)) +
@@ -203,7 +211,7 @@ ggplot(focus_df, aes(x=Year, y=Total.Calories, colour = Category, group = Countr
 focus_top <- focus_df %>% filter(Category == "Top")
 ggplot(focus_top, aes(x=Year, y=Total.Calories)) +
   geom_point() +
-    geom_smooth(method = "lm", se = FALSE, color = "blue")
+    geom_smooth(method = "lm", se = FALSE, color = color_top)
     labs(title = "Change in Caloric Intake for Top 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
@@ -212,7 +220,7 @@ ggplot(focus_top, aes(x=Year, y=Total.Calories)) +
 focus_mid <- focus_df %>% filter(Category == "Mid")
 ggplot(focus_mid, aes(x=Year, y=Total.Calories)) +
   geom_point() +
-    geom_smooth(method = "lm", se = FALSE, color = "green")
+    geom_smooth(method = "lm", se = FALSE, color = color_mid)
     labs(title = "Change in Caloric Intake for Middle 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
@@ -221,7 +229,7 @@ ggplot(focus_mid, aes(x=Year, y=Total.Calories)) +
 focus_bot <- focus_df %>% filter(Category == "Bot")
 ggplot(focus_bot, aes(x=Year, y=Total.Calories)) +
   geom_point() +
-    geom_smooth(method = "lm", se = FALSE, color = "red")
+    geom_smooth(method = "lm", se = FALSE, color = color_bot)
     labs(title = "Change in Caloric Intake for Bottom 10 Countries(2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)")
@@ -233,11 +241,184 @@ ggplot(focus_df, aes(x = Year, y = Total.Calories, color = Category, group = Cou
   labs(title = "Trends in Caloric Intake (2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)") +
-  scale_color_manual(values = c("Top" = "blue", "Mid" = "green", "Bot" = "red")) +  # Optional: set custom colors
+  scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot)) +  # Optional: set custom colors
   theme_minimal()
 
-# Plot 5 - Stacked Bars for total cals from proteins, fats, other (carbs), 2015 vs 2019, groups
+################################################################################
+# Storyline Visuals
+################################################################################
 
-# Plot 6 - Stacked bars for grams proteins, fats
+# Plot 1 - Life expectancy per country in each group
+ggplot(mean_life_exp, aes(x = reorder(Country, Mean_Life_Expectancy), y = Mean_Life_Expectancy, fill = Category)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Countries by Mean Life Expectancy (2021)",
+       x = "Country",
+       y = "Mean Life Expectancy (years)") +
+  scale_fill_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot)) +
+  theme_minimal() +
+  theme(legend.position = "top")
 
-# Plot 7 - Stacked Bars for plant-based vs animal sources
+# Plot 2 - Average Nutritional intake by group
+avg_nutritional_profile <- macro_df %>%
+  group_by(Category, Element) %>%
+  summarize(Average_Calories = mean(Calories, na.rm = TRUE)) %>%
+  ungroup()
+# Stacked bar plot showing the average intake of macronutrients by group
+ggplot(avg_nutritional_profile, aes(x = Category, y = Average_Calories, fill = Element)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Average Nutritional Intake by Group (2010-2021)",
+       x = "Group",
+       y = "Average Daily Intake (kcal)") +
+  scale_fill_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                               "Fat supply quantity (g/capita/day)" = color_fats, 
+                               "Food supply (kcal/capita/day)" = color_cals),
+                    labels = c("Protein supply quantity (g/capita/day)" = "Protein",
+                               "Fat supply quantity (g/capita/day)" = "Fat",
+                               "Food supply (kcal/capita/day)" = "Carbohydrates and Others"),
+                               name = "Calories from:") +
+  theme_minimal()
+
+# Plot 3 - Nutritional Profile Comparison
+ggplot(avg_macro_by_group, aes(x = Year, y = Average_Calories, color = Element, group = Element)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ Category) +
+  labs(title = "Nutritional Profile Comparison (2010-2021)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  scale_color_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                                "Fat supply quantity (g/capita/day)" = color_fats, 
+                                "Food supply (kcal/capita/day)" = color_cals)) +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+# Plot 4 - How do different macro habits affect longevity?
+facet_labels <- c(
+  "Protein supply quantity (g/capita/day)" = "Protein Intake",
+  "Fat supply quantity (g/capita/day)" = "Fat Intake",
+  "Food supply (kcal/capita/day)" = "Total Caloric Intake"
+)
+
+ggplot(macro_df, aes(x = Calories, y = Life.Expectancy, color = Category)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship Between Macronutrient Intake and Life Expectancy",
+       x = "Calories (kcal/capita/day)",
+       y = "Life Expectancy (years)") +
+  scale_color_manual(values = c("Top" = color_top, 
+                                "Middle" = color_mid, 
+                                "Bottom" = color_bot),
+                     labels = c("Top" = "Top 10",
+                                "Middle" = "Middle 10",
+                                "Bottom" = "Bottom 10"),
+                     name = "Group") +  # Change the legend title
+  facet_wrap(~ Element, labeller = labeller(Element = facet_labels)) +
+  theme_minimal()
+
+# Plot 5 - What is the Average Intake of Proteins, Fats, and Carbohydrates Across Different Countries?
+# Simplify labels for macronutrients
+element_labels <- c(
+  "Protein supply quantity (g/capita/day)" = "Protein",
+  "Fat supply quantity (g/capita/day)" = "Fat",
+  "Food supply (kcal/capita/day)" = "Total Calories"
+)
+# Stacked bar plot
+
+avg_nutrient_by_country <- macro_df %>%
+  group_by(Country, Element) %>%
+  summarize(Average_Intake = mean(Calories, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(Highlight = ifelse(Country %in% focus_df$Country[focus_df$Category == "Top"], "Top", "Other"))
+
+# Step 2: Create a stacked bar plot with conditional coloring
+ggplot(avg_nutrient_by_country, aes(x = reorder(Country, -Average_Intake), y = Average_Intake, fill = Element)) +
+  geom_bar(stat = "identity", aes(alpha = Highlight)) +
+  scale_alpha_manual(values = c("Top" = 1, "Other" = 0.3), guide = "none") +  # Highlight Top countries
+  labs(title = "Average Macronutrient Intake by Country",
+       x = "Country",
+       y = "Average Intake (kcal)") +
+  scale_fill_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                               "Fat supply quantity (g/capita/day)" = color_fats, 
+                               "Food supply (kcal/capita/day)" = color_cals),
+                    labels = element_labels,
+                    name = "Macronutrient") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+# Plot 6 - Is the Nutritional Profile the Same for the Top 10 / Middle 10 / Bottom 10?
+ggplot(macro_df, aes(x = Category, y = Calories, fill = Element)) +
+  geom_boxplot() +
+  labs(title = "Macronutrient Intake by Group",
+       x = "Group",
+       y = "Calories (kcal/capita/day)") +
+  scale_fill_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                               "Fat supply quantity (g/capita/day)" = color_fats, 
+                               "Food supply (kcal/capita/day)" = color_cals)) +
+  theme_minimal()
+
+# Plot 7 - Comparison of Their Nutritional Profile with the Suggested Macronutrient Profile
+###################
+# Need to fix this one
+###################
+suggested_intake <- data.frame(
+  Element = c("Protein", "Fat", "Carbohydrates"),
+  Suggested = c(50, 70, 300)  # These values are placeholders
+)
+
+# Merge actual intake with suggested intake
+comparison_df <- avg_macro_by_group %>%
+  mutate(Suggested_Intake = case_when(
+    Element == "Protein supply quantity (g/capita/day)" ~ 50*4,
+    Element == "Fat supply quantity (g/capita/day)" ~ 70*9,
+    Element == "Food supply (kcal/capita/day)" ~ 300*4
+  ))
+
+# Plot comparison
+ggplot(comparison_df, aes(x = Element, y = Average_Calories, fill = Category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_hline(aes(yintercept = Suggested_Intake), linetype = "dashed", color = "black") +
+  labs(title = "Comparison of Actual and Suggested Nutritional Intake",
+       x = "Macronutrient",
+       y = "Intake (kcal/capita/day)") +
+  theme_minimal()
+
+# Plot 8 - Does the Nutrition of the Top 10 Countries Align with Suggestions by the Government/WHO?
+# Radar chart comparing actual vs suggested intake (for Top 10 group)
+
+
+# Example radar chart structure
+top_10_avg <- comparison_df %>% filter(Category == "Top")
+radar_data <- rbind(rep(max(top_10_avg$Average_Calories), 3), rep(0, 3), top_10_avg$Average_Calories)
+radar_data <- as.data.frame(radar_data)
+colnames(radar_data) <- c("Protein", "Fat", "Carbohydrates")
+
+radarchart(radar_data, axistype = 1,
+           pcol = c("blue"), pfcol = c("lightblue"), plwd = 2,
+           cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0, max(top_10_avg$Average_Calories), by = 100),
+           cglwd = 0.8,
+           vlcex = 0.8,
+           title = "Top 10 Countries: Actual vs Suggested Nutritional Profile")
+
+
+# Plot 9 -  Are There Notable Regional or Cultural Differences in Macronutrient Consumption?
+ggplot(macro_df, aes(x = Region, y = Calories, fill = Element)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Regional Differences in Macronutrient Consumption",
+       x = "Region",
+       y = "Calories (kcal/capita/day)") +
+  theme_minimal()
+
+# Plot 10 - How Do Different Types of Macronutrients (e.g., Saturated vs. Unsaturated Fats) Correlate with Life Expectancy?
+ggplot(macro_df %>% filter(Element %in% c("Saturated fat supply quantity (g/capita/day)", "Unsaturated fat supply quantity (g/capita/day)")),
+       aes(x = Calories, y = Life.Expectancy, color = Element)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Correlation Between Fat Types and Life Expectancy",
+       x = "Intake (kcal/capita/day)",
+       y = "Life Expectancy (years)") +
+  theme_minimal()
+
+
+
