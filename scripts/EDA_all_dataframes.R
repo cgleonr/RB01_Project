@@ -448,55 +448,26 @@ ggplot(macro_df, aes(x = Category, y = Calories, fill = Element)) +
   theme_minimal()
 
 # Plot 7 - Comparison of Their Nutritional Profile with the Suggested Macronutrient Profile
-###################
-# Need to fix this one
-###################
-suggested_intake <- data.frame(
-  Element = c("Protein", "Fat", "Carbohydrates"),
-  Suggested = c(50, 70, 300)  # These values are placeholders
-)
 
-# Merge actual intake with suggested intake
-comparison_df <- avg_macro_by_group %>%
-  mutate(Suggested_Intake = case_when(
-    Element == "Protein supply quantity (g/capita/day)" ~ 50*4,
-    Element == "Fat supply quantity (g/capita/day)" ~ 70*9,
-    Element == "Food supply (kcal/capita/day)" ~ 300*4
-  ))
-
-# Plot comparison
-ggplot(comparison_df, aes(x = Element, y = Average_Calories, fill = Category)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  geom_hline(aes(yintercept = Suggested_Intake), linetype = "dashed", color = "black") +
-  labs(title = "Comparison of Actual and Suggested Nutritional Intake",
-       x = "Macronutrient",
-       y = "Intake (kcal/capita/day)") +
-  theme_minimal()
 
 # Plot 8 - Does the Nutrition of the Top 10 Countries Align with Suggestions by the Government/WHO?
 # Radar chart comparing actual vs suggested intake (for Top 10 group)
 
 # Example radar chart structure
-top_10_avg <- comparison_df %>% filter(Category == "Top")
-radar_data <- rbind(rep(max(top_10_avg$Average_Calories), 3), rep(0, 3), top_10_avg$Average_Calories)
-radar_data <- as.data.frame(radar_data)
-colnames(radar_data) <- c("Protein", "Fat", "Carbohydrates")
+#top_10_avg <- comparison_df %>% filter(Category == "Top")
+#radar_data <- rbind(rep(max(top_10_avg$Average_Calories), 3), rep(0, 3), top_10_avg$Average_Calories)
+#radar_data <- as.data.frame(radar_data)
+#colnames(radar_data) <- c("Protein", "Fat", "Carbohydrates")
 
-radarchart(radar_data, axistype = 1,
-           pcol = c("blue"), pfcol = c("lightblue"), plwd = 2,
-           cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0, max(top_10_avg$Average_Calories), by = 100),
-           cglwd = 0.8,
-           vlcex = 0.8,
-           title = "Top 10 Countries: Actual vs Suggested Nutritional Profile")
+#radarchart(radar_data, axistype = 1,
+#           pcol = c("blue"), pfcol = c("lightblue"), plwd = 2,
+#           cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0, max(top_10_avg$Average_Calories), by = 100),
+#           cglwd = 0.8,
+#           vlcex = 0.8,
+#           title = "Top 10 Countries: Actual vs Suggested Nutritional Profile")
 
 
 # Plot 9 -  Are There Notable Regional or Cultural Differences in Macronutrient Consumption?
-ggplot(macro_df, aes(x = Country, y = Calories, fill = Element)) +
-  geom_bar(stat = "identity", position = "stack") +
-  labs(title = "Regional Differences in Macronutrient Consumption",
-       x = "Region",
-       y = "Calories (kcal/capita/day)") +
-  theme_minimal()
 
 # Plot 10 - How Do Different Types of Macronutrients (e.g., Saturated vs. Unsaturated Fats) Correlate with Life Expectancy?
 #### Needs fix
@@ -509,8 +480,6 @@ ggplot(macro_df %>% filter(Element %in% c("Saturated fat supply quantity (g/capi
        x = "Intake (kcal/capita/day)",
        y = "Life Expectancy (years)") +
   theme_minimal()
-
-
 
 
 
@@ -571,3 +540,23 @@ addLayersControl(
   )
 
 map
+
+
+
+# calculate the ratio of vegetal vs animal products consumed by the three country categories
+head(focus_df)
+filtered_df_vegetal_animal_prod <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)" & 
+           (Item == "Vegetal Products" | Item == "Animal Products" | Item == "Year"))
+
+filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
+  group_by(Country, Year, Category) %>%  # Include Category in the grouping
+  summarise(
+    Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Vegetal_Animal = Vegetal / Animal,
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+print(filtered_df_vegetal_animal_prod_ratio)
+head(filtered_df_vegetal_animal_prod_ratio)
+
