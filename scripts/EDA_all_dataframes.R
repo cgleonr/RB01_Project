@@ -30,9 +30,9 @@ library(tidyterra) # for maps
 library(leaflet) # for hovering over the map
 
 # Colors
-color_top <- "blue"
-color_mid <- "green"
-color_bot <- "red"
+color_top <- "#009E73"
+color_mid <- "#56B4E9"
+color_bot <- "#D55E00"
 
 color_protein <- "darkred"
 color_fats <- "yellow3"
@@ -523,7 +523,7 @@ int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, co
   labs(title = "Trends in Caloric Intake (2010-2021)",
        x = "Year",
        y = "Average Daily Intake (kcal)") +
-  scale_color_manual(values = c("Top" = "#009E73", "Mid" = "#56B4E9", "Bot" = "#D55E00")) +  # Apply specified HEX colors
+  scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot)) +  # Apply specified HEX colors
   theme_minimal()
 
 int_plot_caloric_intake_display <- ggplotly(int_plot_caloric_intake, tooltip = "text")
