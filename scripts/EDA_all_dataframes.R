@@ -571,6 +571,3 @@ addLayersControl(
   )
 
 map
-
-
->>>>>>> b6f8346d9982bdc31cc4cea4cd127f39d445d00c
