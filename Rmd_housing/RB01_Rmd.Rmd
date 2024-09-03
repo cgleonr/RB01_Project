@@ -6,13 +6,15 @@ output: html_document
 ---
 
 # Table of Contents
-1. [Introduction](#introduction)
-2. [Data Description](#data-description)
-3. [Data Preparation](#data-preparation)
-4. [Exploratory Data Analysis](#exploratory-data-analysis)
-5. [Modeling](#modeling)
-6. [Chapter of Choice](#chapter-of-choice)
-7. [Conclusion](#conclusion)
+
+1.  [Introduction](#introduction)
+2.  [Data Description](#data-description)
+3.  [Data Preparation](#data-preparation)
+4.  [Exploratory Data Analysis](#exploratory-data-analysis)
+5.  [Modeling](#modeling)
+6.  [Chapter of Choice](#chapter-of-choice)
+7.  [Conclusion](#conclusion)
+
 ```{r setup, include=FALSE}
 # Load necessary libraries
 library(ggplot2)
@@ -23,6 +25,7 @@ library(maptiles) # download tiles from a large number of providers
 library(tidyterra) # add background map/tiles to ggplot2
 
 ```
+
 ```{r Data Loading and Prep, cache=TRUE, include=FALSE}
 
 df <- read.csv("../clean_datasets/final_df.csv")
@@ -97,12 +100,13 @@ diff_vis_data <- na.omit(diff)
 
 #join trends to tables
 subset_df <- subset_df %>%
-  left_join(difference_data %>% select(Country, Total_Calories, Caloric_Intake_Diff, Life_Expectancy_Diff), 
+  left_join(difference_data %>% select(Country, Total_Calories, Caloric_Intake_Diff, Life_Expectancy_Diff),
             by = "Country")
 
 ```
 
-# Introduction
+# Introduction {#introduction}
+
 <a name="introduction"></a>
 
 *Provide a brief introduction to your project, including the objectives and any background information.*
@@ -110,18 +114,23 @@ subset_df <- subset_df %>%
 *Describe the datasets you are using, their sources, and any relevant information about the variables included.*
 
 # Theoretical Focus
+
 <a name="theoretical-focus"></a>
 
-# Data Preparation
+# Data Preparation {#data-preparation}
+
 <a name="data-preparation"></a>
 
 *Detail the steps taken to clean and prepare the data for analysis. Include any data transformations, handling of missing values, and data merging.*
 
-# Exploratory Data Analysis
+# Exploratory Data Analysis {#exploratory-data-analysis}
+
 <a name="exploratory-data-analysis"></a>
 
 ## Life Expectancy Categories {.tabset}
+
 ### Top
+
 ```{r Top 10, echo=FALSE}
 # Display the top countries sorted by Life.Expectancy in descending order
 top_countries <- subset_df %>% 
@@ -130,7 +139,9 @@ top_countries <- subset_df %>%
 
 print(top_countries[,c("Country","Total.Calories","Life.Expectancy", "Caloric_Intake_Diff", "Life_Expectancy_Diff")])
 ```
+
 ### Middle
+
 ```{r Middle 10, echo=FALSE}
 # Display the mid countries sorted by Life.Expectancy in descending order
 mid_countries <- subset_df %>% 
@@ -139,7 +150,9 @@ mid_countries <- subset_df %>%
 
 print(mid_countries[,c("Country","Life.Expectancy", "Caloric_Intake_Diff", "Life_Expectancy_Diff")])
 ```
+
 ### Bottom
+
 ```{r Bottom 10, echo=FALSE}
 # Display the bottom countries sorted by Life.Expectancy in descending order
 bot_countries <- subset_df %>% 
@@ -150,6 +163,7 @@ print(bot_countries[,c("Country","Life.Expectancy", "Caloric_Intake_Diff", "Life
 ```
 
 ## Trends Through the Years
+
 ```{r Trends/Differences, echo=FALSE, warning=FALSE, message=FALSE}
 # Filter the dataset for total caloric intake
 caloric_data <- df %>%
@@ -181,20 +195,23 @@ ggplot(unique_data, aes(x = Total_Calories, y = Life.Expectancy)) +
 
 
 ```
- 
+
 *Provide visualizations and summary statistics that give an overview of the data. Discuss any patterns, trends, or interesting observations.*
 
-# Modeling
+# Modeling {#modeling}
+
 <a name="modeling"></a>
 
 *Describe the modeling techniques you are using. Include any relevant code, and discuss the results of your models.*
 
-# Chapter of Choice
+# Chapter of Choice {#chapter-of-choice}
+
 <a name="chapter-of-choice"></a>
 
 *This section should showcase a method, package, or technique not covered in the main part of the course. Describe the chosen topic and demonstrate its application in your project.*
 
-# Conclusion
+# Conclusion {#conclusion}
+
 <a name="conclusion"></a>
 
 *Summarize your findings, discuss the implications of your results, and consider any limitations of your analysis. Provide suggestions for future work or potential improvements.*

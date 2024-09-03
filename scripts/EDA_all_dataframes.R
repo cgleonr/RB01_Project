@@ -228,6 +228,22 @@ mean_life_exp <- focus_df %>%
   summarize(Mean_Life_Expectancy = mean(Life.Expectancy, na.rm = TRUE)) %>%
   ungroup()
 
+# calculate the ratio of vegetal vs animal products consumed by the three country categories
+head(focus_df)
+filtered_df_vegetal_animal_prod <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)" & 
+           (Item == "Vegetal Products" | Item == "Animal Products" | Item == "Year"))
+
+filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
+  group_by(Country, Year, Category) %>%  # Include Category in the grouping
+  summarise(
+    Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Vegetal_Animal = Vegetal / Animal,
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+print(filtered_df_vegetal_animal_prod_ratio)
+head(filtered_df_vegetal_animal_prod_ratio)
 
 ################################################################################
 # Freeform Visuals
