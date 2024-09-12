@@ -37,32 +37,8 @@ color_bot <- "#D55E00"
 color_protein <- "darkred"
 color_fats <- "yellow3"
 color_cals <- "purple1"
+
 ################################################################################
-# Filter only 2019 values
-df_2021 <- df %>% filter(Year == 2021)
-
-# Remove duplicates and sort by Life.Expectancy
-df_2021_unique <- df_2021 %>% 
-  distinct(Country, .keep_all = TRUE) %>% 
-  arrange(desc(Life.Expectancy))
-df_2021_unique
-# Calculate the middle 10 indices
-mid_start <- round(length(df_2021_unique[,1])/2 - 5)
-mid_end <- round(length(df_2021_unique[,1])/2 + 5)
-
-# Select top 10, middle 10, and bottom 10 countries
-top_10 <- df_2021_unique %>% slice(1:10) %>% mutate(Category = "Top")
-mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid") %>% slice(-9)
-#mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
-bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
-
-# Combine them into one dataframe
-subset_df <- bind_rows(top_10, mid_10, bot_10)
-
-# Filter the original dataframe for the selected countries and years
-df_filtered <- df %>%
-  filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
-  left_join(subset_df %>% select(Country, Category), by = "Country")
 
 # Plot Life expectancy development of the top, mid and bottom 10 countries
 ggplot(df_filtered, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
@@ -108,8 +84,8 @@ df <- read.csv("clean_datasets/final_df.csv")
 # drop indices (column "X")
 df <- df[ , !names(df) %in% c("X")]
 
-# Filter only 2019 values
-df_2021 <- df %>% filter(Year == 2019)
+# Filter only 2021 values
+df_2021 <- df %>% filter(Year == 2021)
 head(df_2021)
 
 # Remove duplicates and sort by Life.Expectancy
@@ -129,7 +105,15 @@ mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>%
 bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
 
 # Combine them into one dataframe
+subset_df <- bind_rows(top_10, mid_10, bot_10)
+
+# Combine them into one dataframe
 focus_df <- bind_rows(top_10, mid_10, bot_10) # Holds top, mid bot 10
+
+# Filter the original dataframe for the selected countries and years
+df_filtered <- df %>%
+  filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
+  left_join(subset_df %>% select(Country, Category), by = "Country")
 
 # now holds all data for top, mid, bot 10
 focus_df <- df %>%
@@ -575,4 +559,221 @@ filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
   )
 print(filtered_df_vegetal_animal_prod_ratio)
 head(filtered_df_vegetal_animal_prod_ratio)
+
+
+
+
+
+#### Plot 9: Map
+## plotting the base map
+#Create leaflet map
+map <- leaflet() %>%
+  addTiles() %>%
+  
+  #Top countries Layer
+  addCircleMarkers(data = top_10,
+                   ~Longitude, ~Latitude,
+                   color = '#009E73',
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", top_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", top_10$Value, "kcal"),
+                   group = "Top 10") %>%
+  #Mid countries layer
+  addCircleMarkers(data = mid_10, 
+                   ~Longitude, ~Latitude, 
+                   color = '#56B4E9', 
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", mid_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", mid_10$Value, "kcal"),
+                   group = "Mid 10") %>%
+  #Bot Countries Layer
+  addCircleMarkers(data = bot_10, 
+                   ~Longitude, ~Latitude, 
+                   color = '#D55E00', 
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", bot_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", bot_10$Value, "kcal"),
+                   group = "Bottom 10") %>%
+  
+  #layers control
+  addLayersControl(
+    overlayGroups = c("Top 10", "Middle 10", "Bottom 10"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+map
+
+#### df for Plot 10 and 11
+head(focus_df)
+filtered_df_vegetal_animal_prod <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)" &
+           (Item == "Vegetal Products" | Item == "Animal Products"))
+
+# Summarize the data by Country, Year, Category, and include Life Expectancy
+filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
+  group_by(Country, Year, Category) %>%
+  summarise(
+    Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Vegetal_Animal = Vegetal / Animal,
+    Life_Expectancy = first(Life.Expectancy),  # Include Life Expectancy
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+
+# Display the updated dataframe
+print(filtered_df_vegetal_animal_prod_ratio)
+
+### Plot 10: Ratio of Animal vs. Vegetal Products consumed with life expectancy
+color_top <- "#009E73"
+color_mid <- "#56B4E9"
+color_bot <- "#D55E00"
+
+p <- ggplot(filtered_df_vegetal_animal_prod_ratio, 
+            aes(x = Year, y = Ratio_Vegetal_Animal, color = Category, group = Country, 
+                text = paste("Country:", Country, "<br>",
+                             "Ratio:", round(Ratio_Vegetal_Animal, 2), "<br>",
+                             "Life Expectancy:", Life_Expectancy))) +
+  geom_line() +  # Line for each country
+  geom_point() + # Points for each observation
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bottom, Mid, Top)
+  scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot)) + # Use custom colors
+  labs(
+    title = "Ratio of Animal vs. Vegetal Products Consumed per Country Over Time",
+    x = "Year",
+    y = "Ratio of Vegetal to Animal Products"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "none")  # Remove the legend
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_plot <- ggplotly(p, tooltip = "text")
+
+# Display the interactive plot
+interactive_plot
+
+
+### Plot11: Plot to show the average Intage of Animal vs Plant based products over the years for country categories
+averaged_data <- filtered_df_vegetal_animal_prod_ratio %>%
+  group_by(Year, Category) %>%
+  summarise(
+    Avg_Vegetal = mean(Vegetal, na.rm = TRUE),
+    Avg_Animal = mean(Animal, na.rm = TRUE)
+  )
+
+# Reshape data for ggplot (long format) and rename Product Types
+averaged_data_long <- averaged_data %>%
+  pivot_longer(cols = c(Avg_Vegetal, Avg_Animal), 
+               names_to = "Product Type", 
+               values_to = "Avg_Calories_Consumed") %>%
+  mutate(`Product Type` = recode(`Product Type`,
+                                 "Avg_Vegetal" = "Average Vegetal Products",
+                                 "Avg_Animal" = "Average Animal Products"))
+
+# Create the base ggplot2 bar plot with updated labels and hover text
+p_avg_bar <- ggplot(averaged_data_long, aes(x = Year, y = Avg_Calories_Consumed, fill = `Product Type`, 
+                                            text = paste(`Product Type`, ":", round(Avg_Calories_Consumed, 2)))) +
+  geom_bar(stat = "identity", position = "dodge") +  # Bar chart with dodged position for Animal and Vegetal
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_fill_manual(values = c("Average Vegetal Products" = color_mid, "Average Animal Products" = color_bot)) + # Use custom colors for products
+  labs(
+    title = "Average Daily Calories Consumed from Animal vs. Vegetal Products per Category Over Time",
+    x = "Year",
+    y = "Average Daily Calories Consumed in kcal"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "top")  # Position the legend at the top
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_avg_plot_bar <- ggplotly(p_avg_bar, tooltip = "text")
+
+# Display the interactive plot
+interactive_avg_plot_bar
+
+##### df for protein type
+# Filter the data for Protein supply quantities
+filtered_df_protein <- focus_df %>%
+  filter(Element == "Protein supply quantity (g/capita/day)" &
+           (Item == "Vegetal Products" | Item == "Animal Products"))
+
+# Summarize the data by Country, Year, Category, and Life Expectancy
+filtered_df_protein_summary <- filtered_df_protein %>%
+  group_by(Country, Year, Category) %>%
+  summarise(
+    Protein_Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Protein_Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Protein_Animal_Vegetal = Protein_Animal / Protein_Vegetal,
+    Life_Expectancy = first(Life.Expectancy),  # Taking the first value as Life Expectancy is consistent for the group
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+
+# Display the new dataframe
+print(filtered_df_protein_summary)
+
+# Plot 12: ratio of plant vs. animal protein with life expectancy for each country
+p_protein <- ggplot(filtered_df_protein_summary, 
+                    aes(x = Year, y = Ratio_Protein_Animal_Vegetal, color = Category, group = Country, 
+                        text = paste("Country:", Country, "<br>",
+                                     "Ratio:", round(Ratio_Protein_Animal_Vegetal, 2), "<br>",
+                                     "Life Expectancy:", Life_Expectancy))) +
+  geom_line() +  # Line for each country
+  geom_point() + # Points for each observation
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot)) + # Use custom colors
+  labs(
+    title = "Ratio of Plant vs. Animal-Based Protein Consumed per Country Over Time",
+    x = "Year",
+    y = "Ratio of Animal to Vegetal Protein"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "none")  # Remove the legend
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_protein_plot <- ggplotly(p_protein, tooltip = "text")
+
+# Display the interactive plot
+interactive_protein_plot
+
+
+
+
+#Plot 13: Comparison of Animal vs. Plant Proteil consumption
+color_animal <- "#D55E00"
+color_vegetal <- "#56B4E9"
+
+# Calculate the average protein consumed per year for each category
+averaged_protein_data <- filtered_df_protein_summary %>%
+  group_by(Year, Category) %>%
+  summarise(
+    Avg_Protein_Vegetal = mean(Protein_Vegetal, na.rm = TRUE),
+    Avg_Protein_Animal = mean(Protein_Animal, na.rm = TRUE)
+  )
+
+# Reshape data for ggplot (long format)
+averaged_protein_data_long <- averaged_protein_data %>%
+  pivot_longer(cols = c(Avg_Protein_Vegetal, Avg_Protein_Animal), 
+               names_to = "Product_Type", 
+               values_to = "Avg_Protein_Consumed") %>%
+  mutate(Product_Type = recode(Product_Type,
+                               "Avg_Protein_Vegetal" = "Average Vegetal Protein",
+                               "Avg_Protein_Animal" = "Average Animal Protein"))
+
+# Create the base ggplot2 bar plot with facets for each category
+p_avg_protein_bar <- ggplot(averaged_protein_data_long, aes(x = Year, y = Avg_Protein_Consumed, fill = Product_Type, 
+                                                            text = paste(Product_Type, ":", round(Avg_Protein_Consumed, 2)))) +
+  geom_bar(stat = "identity", position = "dodge") +  # Bar chart with dodged position for Animal and Vegetal
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_fill_manual(values = c("Average Vegetal Protein" = color_vegetal, "Average Animal Protein" = color_animal)) + # Use custom colors
+  labs(
+    title = "Average Daily Protein Consumed from Animal vs. Vegetal Products Over Time by Category",
+    x = "Year",
+    y = "Average Daily Protein Consumed (g)"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "top")  # Position the legend at the top
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_avg_protein_plot <- ggplotly(p_avg_protein_bar, tooltip = "text")
+
+# Display the interactive plot
+interactive_avg_protein_plot
+
 
