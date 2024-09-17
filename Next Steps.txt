@@ -9,7 +9,6 @@ Questions to be answered:
 	- have biggest 'block' on the left, adjust text
 - Make some more visuals with vegetal_animal_prod dataframes
 
-
 Points:
 - Enough visuals for RQ1
 - Create visuals for RQ2

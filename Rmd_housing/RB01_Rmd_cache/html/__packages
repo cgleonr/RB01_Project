@@ -2,3 +2,10 @@ ggplot2
 dplyr
 gganimate
 tidyr
+plotly
+fmsb
+maptiles
+sf
+tidyterra
+leaflet
+patchwork

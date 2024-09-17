@@ -233,7 +233,7 @@ head(filtered_df_vegetal_animal_prod_ratio)
 # Freeform Visuals
 ################################################################################
 
-# Plot 1 - Change in Life Expectancy from 2015-2019, focus countries
+# Plot 1 - Change in Life Expectancy from 2010-2019, focus countries
 ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Country)) +
   geom_line(size = 1) +
   geom_point() +
@@ -243,7 +243,7 @@ ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Co
   theme_minimal() +
   scale_color_manual(values = c("Top" = color_top, "Mid" = color_mid, "Bot" = color_bot))
 
-# Plot 1.1 - Change in Life Expectancy from 2015 - 2019, focus countries - interactive
+# Plot 1.1 - Change in Life Expectancy from 2010 - 2019, focus countries - interactive
 int_plot_life_exp <- ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Country, text = Country)) +
   geom_line(size = 1) +
   geom_point() +

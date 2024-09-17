@@ -1,107 +1,184 @@
 ---
-title: "Nutritional Habits and their Relationship to Longevity"
+title: "Understanding Potential Dietary Drivers of Longevity Across Countries"
 author: "Carlos Leon, Kristian Zutter"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  rmdformats::readthedown
+    #html_document:
+    #self_contained: false # Disable to reduce file size for interactive plots
+  
 ---
-
-# Table of Contents
-
-1.  [Introduction](#introduction)
-2.  [Data Description](#data-description)
-3.  [Data Preparation](#data-preparation)
-4.  [Exploratory Data Analysis](#exploratory-data-analysis)
-5.  [Modeling](#modeling)
-6.  [Chapter of Choice](#chapter-of-choice)
-7.  [Conclusion](#conclusion)
 
 ```{r setup, include=FALSE}
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
-library(tidyr)
-library(gganimate) # animates ggplots
-library(maptiles) # download tiles from a large number of providers
-library(tidyterra) # add background map/tiles to ggplot2
+library(plotly) # for interactive plots
+library(fmsb)
+library(maptiles) # for maps
+library(sf) # for maps
+library(tidyterra) # for maps
+library(leaflet) # for hovering over the map
+library(patchwork) # for placing visuals side by side
+library(rmdformats) # for the'readthedown' theme
+
+# Colors
+color_top <- "#009E73"
+color_mid <- "#56B4E9"
+color_bot <- "#D55E00"
+
+color_protein <- "darkred"
+color_fats <- "yellow3"
+color_cals <- "purple1"
 
 ```
 
-```{r Data Loading and Prep, cache=TRUE, include=FALSE}
-
+```{r Data Loading and Prep, include=FALSE}
+# Load in DF
 df <- read.csv("../clean_datasets/final_df.csv")
+# drop indices (column "X")
+df <- df[ , !names(df) %in% c("X")]
 
-# Filter only 2019 values
-df_2019 <- df %>% filter(Year == 2019)
+# Filter only 2021 values
+df_2021 <- df %>% filter(Year == 2021)
 
 # Remove duplicates and sort by Life.Expectancy
-df_2019_unique <- df_2019 %>% 
+df_2021_unique <- df_2021 %>% 
   distinct(Country, .keep_all = TRUE) %>% 
   arrange(desc(Life.Expectancy))
-df_2019_unique
 
-# Calculate the middle 10 indices
-mid_start <- round(length(df_2019_unique[,1])/2 - 5)
-mid_end <- round(length(df_2019_unique[,1])/2 + 4)
+# Calculate the middle indices
+mid_start <- round(length(df_2021_unique[,1])/2 - 5)
+mid_end <- round(length(df_2021_unique[,1])/2 + 5)
 
 # Select top 10, middle 10, and bottom 10 countries
-top_10 <- df_2019_unique %>% slice(1:10) %>% mutate(Category = "Top")
-mid_10 <- df_2019_unique %>% slice(mid_start:mid_end) %>% mutate(Category = "Mid")
-mid_10 <- mid_10 %>% slice(-9) %>% mutate(Category = "Mid") # grabs 11, but #9 has a char error
-bot_10 <- df_2019_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
+top_10 <- df_2021_unique %>% slice(1:10) %>% mutate(Category = "Top")
+mid_10 <- df_2021_unique %>% slice(mid_start:mid_end) %>% 
+  mutate(Category = "Mid") %>% slice(-9) # Picks 11, #9 has error
+bot_10 <- df_2021_unique %>% slice((n() - 9):n()) %>% mutate(Category = "Bot")
 
 # Combine them into one dataframe
 subset_df <- bind_rows(top_10, mid_10, bot_10)
 
+# Combine them into one dataframe
+focus_df <- bind_rows(top_10, mid_10, bot_10) # Holds top, mid bot 10
 
 # Filter the original dataframe for the selected countries and years
 df_filtered <- df %>%
-  filter(Country %in% subset_df$Country, Year >= 2015, Year <= 2019) %>%
+  filter(Country %in% subset_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
   left_join(subset_df %>% select(Country, Category), by = "Country")
 
+# now holds all data for top, mid, bot 10
+focus_df <- df %>%
+  filter(Country %in% focus_df$Country, Year >= min(df$Year), Year <= max(df$Year)) %>%
+  left_join(focus_df %>% select(Country, Category), by = "Country")
+
 # Filter the dataset for total caloric intake
-caloric_data <- df %>%
+total_caloric_intake <- focus_df %>%
   filter(Element == "Food supply (kcal/capita/day)" & Unit == "kcal/cap/d") %>%
   group_by(Country, Year) %>%
-  summarize(Total_Calories = sum(Value, na.rm = TRUE)/2) #2 because total was both sexes
+  summarize(Total.Calories = sum(Value, na.rm = TRUE)/2) #2 because total was both sexes
 
 life_exp <- df %>% 
   select(Country, Year, Life.Expectancy)
 
 # Merge caloric data with life expectancy data
-merged_df <- caloric_data %>%
+merged_cal_longevity_df <- total_caloric_intake %>%
   left_join(life_exp, by = c("Country", "Year"))
 
 # select distinct
-unique_data <- merged_df %>%
+unique_cal_long_df <- merged_cal_longevity_df %>%
   distinct(Country, Year, .keep_all = TRUE)
 
 # Calculating differences in cal intake and LE
-difference_data <- unique_data %>%
+difference_kcal_LE <- unique_cal_long_df %>%
+  arrange(Country, Year) %>%  # Ensure data is ordered by Country and Year
   group_by(Country) %>%
-  reframe(
-    Caloric_Intake_Diff = Total_Calories[Year == 2019] - Total_Calories[Year == 2015],
-    Life_Expectancy_Diff = Life.Expectancy[Year == 2019] - Life.Expectancy[Year == 2015]
-  )
+  mutate(
+    Caloric.Intake.Diff = Total.Calories - lag(Total.Calories),
+    Life.Expectancy.Diff = Life.Expectancy - lag(Life.Expectancy)
+  ) %>%
+  ungroup()
 
 
 # Select the 'Country' and 'Category' columns
-category_data <- subset_df %>% 
+category_data <- focus_df %>% 
   select(Country, Category) %>% 
   distinct()
 
+# deselect repeated columns
+diff_kcal_LE_selected <- difference_kcal_LE %>% 
+  select(-Life.Expectancy)
+
 # Merge the category information into difference_data
-difference_data <- difference_data %>%
-  left_join(category_data, by = "Country")
+focus_df <- focus_df %>%
+  left_join(diff_kcal_LE_selected, by = c("Country","Year"))
 
-# Add total calories to difference_data
+# Up to this point, focus_df has all columns except total calories, since the calories are all together.
+# We can try to get only the rows under Food which are:
+# Food supply (kcal/capita/day), to see caloric sources, and the same for grams.
 
-# View the updated dataframe
-diff_vis_data <- na.omit(diff)
+# Filter for caloric sources 
+caloric_sources <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)")
 
-#join trends to tables
-subset_df <- subset_df %>%
-  left_join(difference_data %>% select(Country, Total_Calories, Caloric_Intake_Diff, Life_Expectancy_Diff),
-            by = "Country")
+# Filter for macro grams sources 2015
+macro_sources <- focus_df %>%
+  filter(Element == c("Protein supply quantity (g/capita/day)",
+                      "Fat supply quantity (g/capita/day)"))
+
+# Filter the dataframe for relevant elements (Protein, Fat, and Total Calories)
+macro_df <- focus_df %>%
+  filter(Element %in% c("Protein supply quantity (g/capita/day)", 
+                        "Fat supply quantity (g/capita/day)", 
+                        "Food supply (kcal/capita/day)"))  # Total calories
+
+# Convert protein and fat values to calories
+macro_df <- macro_df %>%
+  mutate(Calories = case_when(
+    Element == "Protein supply quantity (g/capita/day)" ~ Value * 4,
+    Element == "Fat supply quantity (g/capita/day)" ~ Value * 9,
+    Element == "Food supply (kcal/capita/day)" ~ Value
+  ))
+
+avg_macro_by_group <- macro_df %>%
+  group_by(Year, Category, Element) %>%
+  summarize(Average_Calories = mean(Calories, na.rm = TRUE)) %>%
+  ungroup()
+
+focus_df <- focus_df %>%
+  mutate(Category = factor(Category, levels = c("Top", "Mid", "Bot"),
+                           labels = c("Top", "Middle", "Bottom")))
+macro_df <- macro_df %>%
+  mutate(Category = factor(Category, levels = c("Top", "Mid", "Bot"),
+                           labels = c("Top", "Middle", "Bottom")))
+mean_life_exp <- focus_df %>%
+  filter(Year == 2021) %>%
+  group_by(Country, Category) %>%
+  summarize(Mean_Life_Expectancy = mean(Life.Expectancy, na.rm = TRUE)) %>%
+  ungroup()
+
+# calculate the ratio of vegetal vs animal products consumed by the three country categories
+filtered_df_vegetal_animal_prod <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)" & 
+           (Item == "Vegetal Products" | Item == "Animal Products" | Item == "Year"))
+
+filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
+  group_by(Country, Year, Category) %>%  # Include Category in the grouping
+  summarise(
+    Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Vegetal_Animal = Vegetal / Animal,
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+
+# Add Total Calories to df
+df_2021 <- df_2021 %>%
+  left_join(focus_df %>% select(Country, Year, Total.Calories), 
+            by = c("Country", "Year"))
+mean_life_exp <- mean_life_exp %>%
+  left_join(df_2021 %>% select(Country, Total.Calories), 
+            by = c("Country"))
 
 ```
 
@@ -117,101 +194,179 @@ subset_df <- subset_df %>%
 
 <a name="theoretical-focus"></a>
 
-# Data Preparation {#data-preparation}
 
-<a name="data-preparation"></a>
+# Methodology {#methodology}
+
+<a name="methodology"></a>
 
 *Detail the steps taken to clean and prepare the data for analysis. Include any data transformations, handling of missing values, and data merging.*
 
-# Exploratory Data Analysis {#exploratory-data-analysis}
+# Results and Discussion {#results-and-discussion}
 
-<a name="exploratory-data-analysis"></a>
+<a name="results-and-discussion"></a>
 
-## Life Expectancy Categories {.tabset}
+```{r Countries by Mean Life Expectancy (2021), warning=FALSE, echo=FALSE}
 
-### Top
+# Plot 1 - Life expectancy per country in each group
+p1 <- ggplot(mean_life_exp, aes(x = reorder(Country, Mean_Life_Expectancy), 
+                               y = Mean_Life_Expectancy, 
+                               fill = Category,
+                               text = paste("Country: ", Country, "<br>",
+                                            "Mean Life Expectancy: ", Mean_Life_Expectancy, " years<br>",
+                                            "Total Caloric Intake: ", Total.Calories, " kcal"))) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Countries by Mean Life Expectancy (2021)",
+       x = "Country",
+       y = "Mean Life Expectancy (years)") +
+  scale_fill_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot)) +
+  theme_minimal() +
+  theme(legend.position = "top")
 
-```{r Top 10, echo=FALSE}
-# Display the top countries sorted by Life.Expectancy in descending order
-top_countries <- subset_df %>% 
-  filter(Category == "Top") %>% 
-  arrange(desc(Life.Expectancy))
-
-print(top_countries[,c("Country","Total.Calories","Life.Expectancy", "Caloric_Intake_Diff", "Life_Expectancy_Diff")])
+# Convert ggplot to plotly for interactivity
+ggplotly(p1, tooltip = "text")
 ```
+_Plot 1: Countries by Mean Life Expectancy_
 
-### Middle
 
-```{r Middle 10, echo=FALSE}
-# Display the mid countries sorted by Life.Expectancy in descending order
-mid_countries <- subset_df %>% 
-  filter(Category == "Mid") %>% 
-  arrange(desc(Life.Expectancy))
 
-print(mid_countries[,c("Country","Life.Expectancy", "Caloric_Intake_Diff", "Life_Expectancy_Diff")])
+```{r Map, echo=FALSE, warning=FALSE}
+#### Map
+## plotting the base map
+#Create leaflet map
+map <- leaflet() %>%
+  addTiles() %>%
+  
+  #Top countries Layer
+  addCircleMarkers(data = top_10,
+                   ~Longitude, ~Latitude,
+                   color = color_top,
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", top_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", top_10$Value, "kcal"),
+                   group = "Top 10") %>%
+  #Mid countries layer
+  addCircleMarkers(data = mid_10, 
+                   ~Longitude, ~Latitude, 
+                   color = color_mid, 
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", mid_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", mid_10$Value, "kcal"),
+                   group = "Mid 10") %>%
+  #Bot Countries Layer
+  addCircleMarkers(data = bot_10, 
+                   ~Longitude, ~Latitude, 
+                   color = color_bot, 
+                   label = ~paste("Country:", Country, " - ",
+                                  "Life Expectancy:", bot_10$Life.Expectancy, "years", " - ",
+                                  "Caloric Intake:", bot_10$Value, "kcal"),
+                   group = "Bottom 10") %>%
+  
+  #layers control
+  addLayersControl(
+    overlayGroups = c("Top 10", "Middle 10", "Bottom 10"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+map
+
 ```
+_Plot 2: World Map of Categorized Countries_
 
-### Bottom
 
-```{r Bottom 10, echo=FALSE}
-# Display the bottom countries sorted by Life.Expectancy in descending order
-bot_countries <- subset_df %>% 
-  filter(Category == "Bot") %>% 
-  arrange(desc(Life.Expectancy))
+Plot 1 illustrates life expectancy for countries in the top 10, middle 10, and bottom 10 categories. The accompanying map (Plot 2) geographically locates countries from these three groups. Hovering over the dots on the map or the bars in the chart reveals details for each country, such as the country name, its average life expectancy, and the average caloric intake. 
 
-print(bot_countries[,c("Country","Life.Expectancy", "Caloric_Intake_Diff", "Life_Expectancy_Diff")])
+From the bar chart, we observe that Japan leads in life expectancy, followed closely by South Korea, Spain, and France. Noticeably, the gap in life expectancy between the countries in the top and middle categories is relatively small. There is a more significant decline in life expectancy when we compare the life expectancy of countries from the middle group with the bottom group. The countries in the bottom category are predominantly located in Africa, particularly near the equator or in southern regions. In contrast, the middle group of countries includes nations from Asia, Africa, and Latin America, reflecting a more geographically diverse mix. 
+
+The countries from the top category are more dispersed, covering Europe, the Middle East, East Asia, and Oceania. Upon first inspection, it becomes evident that the countries in the top category are primarily from the developed world, while the middle category includes less developed countries, and the bottom category comprises the least developed nations. 
+
+
+```{r Change in Life Expectancy 2010-2021, echo=FALSE, warning=FALSE}
+# Convert category to factor
+focus_df$Category <- factor(focus_df$Category, levels = c("Top", "Middle", "Bottom"))
+
+
+int_plot_life_exp <- ggplot(focus_df, aes(x = Year, y = Life.Expectancy, color = Category, group = Country, text = Country)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(title = "Life Expectancy (2010-2021)", 
+       x = "Year", 
+       y = "Life Expectancy (years)") +
+  theme_minimal() +
+  scale_color_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot))
+
+int_plot_life_exp_display <- ggplotly(int_plot_life_exp, tooltip = "text")
+
+int_plot_life_exp_display
+
 ```
+_Plot 3: Change in Life Expectancy 2015-2021_
 
-## Trends Through the Years
+To get a closer look at the developments of life expectancy between 2010 and 2021, let’s consider plot 3. Each line in the chart represents one country, and hovering over it displays details such as the country name and specific data points. The plot shows that countries from the top and middle categories have relatively similar life expectancy, while there is a bigger gap to the countries in the bottom category.  
 
-```{r Trends/Differences, echo=FALSE, warning=FALSE, message=FALSE}
-# Filter the dataset for total caloric intake
-caloric_data <- df %>%
-  filter(Element == "Food supply (kcal/capita/day)" & Unit == "kcal/cap/d") %>%
-  group_by(Country, Year) %>%
-  summarize(Total_Calories = sum(Value, na.rm = TRUE)/2) #2 because total was both sexes
+Notably, life expectancy has generally risen over the last decade for countries in all three categories. However, a sharp drop is visible in 2020, which studies suggest may be attributed to the COVID-19 pandemic. According to Cao et al. (2023), global life expectancy declined by an average of 1.8 years due to the pandemic, with Latin America being the most affected region. 
 
-life_exp <- df %>% 
-  select(Country, Year, Life.Expectancy)
+The impact of the pandemic is more pronounced in middle-category countries, where the drop in life expectancy was larger than in the top-category countries. This may be due to the varying levels of access to healthcare during the pandemic, though this is speculative and requires further investigation. In contrast, the countries in the top category countries experienced a less significant decline, perhaps because of better access to healthcare. 
 
-# Merge caloric data with life expectancy data
-merged_df <- caloric_data %>%
-  left_join(life_exp, by = c("Country", "Year"))
+The gap between the middle and bottom countries is relatively large. While both groups have seen improvements in life expectancy over the years, the bottom-category countries remain far behind. Only three countries of the bottom group —Somalia, Lesotho, and the Central African Republic—experienced a notable decline during the pandemic. 
 
-# select distinct
-unique_data <- merged_df %>%
-  distinct(Country, Year, .keep_all = TRUE)
-# Cals Consumed vs Life Expectancy
-ggplot(unique_data, aes(x = Total_Calories, y = Life.Expectancy)) +
-  geom_point(aes(color = as.factor(Year)), size = 3, alpha = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "black") +
-  labs(title = "Relationship Between Total Caloric Intake and Life Expectancy",
-       x = "Total Calories Consumed (kcal/capita/day)",
-       y = "Life Expectancy (Years)",
-       color = "Year") +
+This plot shows that life expectancy has risen globally over the past decade, the effects of external factors such as the COVID-19 pandemic have caused noticeable disruptions, particularly in less developed nations. These trends highlight the importance of addressing healthcare inequities, especially in the wake of global crises.
+
+```{r Change in Caloric Intake 2010-2021, echo=FALSE, warning=FALSE}
+int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, colour = Category, group = Country, text = Country)) +
+  geom_line(size = 1) +  
+  geom_point() +
+  labs(title = "Change in Caloric Intake (2010-2021)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  theme_minimal() +
+  scale_color_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot))
+
+int_plot_caloric_intake_display <- ggplotly(int_plot_caloric_intake, tooltip = "text")
+
+int_plot_caloric_intake_display
+```
+_Plot 4: Change in Caloric Intake 2010-2021_
+
+Next, when considering caloric intake, we see that countries in the top 10 life expectancy group also have the highest caloric intake, followed by the middle 10 countries, with the bottom 10 countries ingesting the least (plot 4). From this, a possible initial relationship emerges: countries with higher life expectancy also tend to consume more calories. 
+
+However, when examined more closely, it becomes evident that the caloric intake for the top and middle countries is rising steadily, but at different rates. The middle countries show a sharper increase in caloric intake, which may reflect their improving economic and healthcare conditions. In contrast, the bottom 10 countries show a slight decline in caloric intake over the years, even as their life expectancy rises. This counterintuitive trend suggests that while caloric intake plays a role in life expectancy, other significant factors must also be at play. 
+
+__From these initial observations, we can condense three main points:__
+
+- Countries in the top 10 life expectancy group have had a relatively stable life expectancy since 2010, with only a slight drop during the COVID-19 pandemic. These countries also consume the most calories across the observed period. 
+
+- The middle group, while still developing, shows progress: both life expectancy and caloric intake have risen since 2010. Their caloric intake is the second highest among the three groups, and their life expectancy is gradually approaching the levels seen in the top category. 
+
+- The bottom 10 countries also show an increase in life expectancy over the years, but their caloric intake has declined slightly. Despite consuming fewer calories, these countries have managed to improve their life expectancy, indicating that factors beyond nutrition—such as healthcare access and disease prevention—could be contributing to these gains.
+
+
+```{r Nutritional Profile Comparison - setup, echo=FALSE, warning=FALSE, message=FALSE}
+facet_labels <- c(
+  "Protein supply quantity (g/capita/day)" = "Protein Intake",
+  "Fat supply quantity (g/capita/day)" = "Fat Intake",
+  "Food supply (kcal/capita/day)" = "Total Caloric Intake"
+)
+
+ggplot(macro_df, aes(x = Calories, y = Life.Expectancy, color = Category)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship Between Macronutrient Intake and Life Expectancy",
+       x = "Calories (kcal/capita/day)",
+       y = "Life Expectancy (years)") +
+  scale_color_manual(values = c("Top" = color_top, 
+                                "Middle" = color_mid, 
+                                "Bottom" = color_bot),
+                     labels = c("Top" = "Top 10",
+                                "Middle" = "Middle 10",
+                                "Bottom" = "Bottom 10"),
+                     name = "Group") +  # Change the legend title
+  facet_wrap(~ Element, labeller = labeller(Element = facet_labels)) +
   theme_minimal()
-
-#summary(lm(Life.Expectancy~Total_Calories, unique_data))
-
-
 ```
 
-*Provide visualizations and summary statistics that give an overview of the data. Discuss any patterns, trends, or interesting observations.*
+_Plot 4: Nutritional Profile Comparison_
 
-# Modeling {#modeling}
-
-<a name="modeling"></a>
-
-*Describe the modeling techniques you are using. Include any relevant code, and discuss the results of your models.*
-
-# Chapter of Choice {#chapter-of-choice}
-
-<a name="chapter-of-choice"></a>
-
-*This section should showcase a method, package, or technique not covered in the main part of the course. Describe the chosen topic and demonstrate its application in your project.*
 
 # Conclusion {#conclusion}
-
 <a name="conclusion"></a>
-
-*Summarize your findings, discuss the implications of your results, and consider any limitations of your analysis. Provide suggestions for future work or potential improvements.*
