@@ -1,12 +1,9 @@
 ---
 title: "Understanding Potential Dietary Drivers of Longevity Across Countries"
 author: "Carlos Leon, Kristian Zutter"
-date: "`r Sys.Date()`"
+date: "18-09-2024"
 output:
   rmdformats::readthedown
-    #html_document:
-    #self_contained: false # Disable to reduce file size for interactive plots
-  
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +18,8 @@ library(tidyterra) # for maps
 library(leaflet) # for hovering over the map
 library(patchwork) # for placing visuals side by side
 library(rmdformats) # for the'readthedown' theme
+library(kableExtra) # for formatting
+library(knitr) # for formatting
 
 # Colors
 color_top <- "#009E73"
@@ -180,31 +179,162 @@ mean_life_exp <- mean_life_exp %>%
   left_join(df_2021 %>% select(Country, Total.Calories), 
             by = c("Country"))
 
+filtered_df_protein <- focus_df %>%
+  filter(Element == "Protein supply quantity (g/capita/day)" &
+           (Item == "Vegetal Products" | Item == "Animal Products"))
+
+# Summarize the data by Country, Year, Category, and Life Expectancy
+filtered_df_protein_summary <- filtered_df_protein %>%
+  group_by(Country, Year, Category) %>%
+  summarise(
+    Protein_Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Protein_Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Protein_Animal_Vegetal = Protein_Animal / Protein_Vegetal,
+    Life_Expectancy = first(Life.Expectancy),  # Taking the first value as Life Expectancy is consistent for the group
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+
+
 ```
 
-# Introduction {#introduction}
+# Introduction
+Diet plays a crucial role in influencing health and longevity, with numerous studies emphasizing the importance of nutrition in extending life expectancy. A balanced intake of macronutrients—such as carbohydrates, fats, and proteins—has been consistently linked to improved health outcomes and increased lifespan. However, the relationship between dietary intake and life expectancy remains complex, as it is influenced by a variety of factors beyond nutrition, including healthcare access, socio-economic conditions, and lifestyle choices. 
 
-<a name="introduction"></a>
+>_1. How does life expectancy and caloric intake compare geographically across countries?_<br>
+>_2. How do different macronutrient ratios influence life expectancy?_<br>
+>_3. What is the impact of a plant- versus animal-based diet on life expectancy?_<br>
 
-*Provide a brief introduction to your project, including the objectives and any background information.*
+The objective is to understand how the consumption of certain macronutrients affects life expectancy, focusing on three country groups ranked by life expectancy (top 10, middle 10, and bottom 10 countries). This analysis seeks to uncover patterns that explain the relationship between diet and longevity, providing insights relevant for policymakers, healthcare professionals, and nutritionists. 
 
-*Describe the datasets you are using, their sources, and any relevant information about the variables included.*
+Contrary to some studies advocating caloric restriction, we found that countries with higher life expectancy often consume more calories. This suggests that calorie quality and access to healthcare may be more influential than calorie quantity. Additionally, countries with higher life expectancy consumed more animal-based proteins, which aligns with the theory that animal proteins support better overall health. Meanwhile, life expectancy in some lower-income countries continues to rise despite lower caloric intake, highlighting the importance of potential factors like healthcare access. 
+
+This report shows limitations that are severalfold. While diet is a key factor, other elements like healthcare, food accessibility, and socio-economic conditions also affect longevity. The quality and availability of data may also vary between countries, potentially influencing the results. 
+
 
 # Theoretical Focus
+Understanding the nutritional drivers of life expectancy requires examining the influence of nutrition and dietary patterns. Research highlights the importance of health-related behaviors—such as maintaining a healthy BMI, regular physical activity, and a nutritious diet—in extending life expectancy. For instance, Li et al. (2018) found that adopting these factors could extend life by up to 14 years for women and 12 years for men compared to those with higher-risk behaviors. 
 
-<a name="theoretical-focus"></a>
+Diet plays a crucial role in longevity. Specific dietary habits, such as caloric and methionine restriction, are linked to longer lifespans and reduced mortality (Ekmekcioglu, 2020). The consumption of whole grains, vegetables, fruits, nuts, and coffee has consistently been associated with increased lifespan and improved health outcomes. 
+
+### Macronutrient Balance and Global Variability 
+Macronutrient intake, which includes proteins, carbohydrates, and fats, plays a significant role in public health. While protein intake remains stable globally, carbohydrate and fat consumption vary more widely across regions, reflecting economic and cultural differences (Lieberman et al., 2020). The WHO recommends limiting fat to 30% of total energy intake, prioritizing whole grains, vegetables, and fruits in diets—key elements of many healthful dietary patterns. 
+
+### Animal vs. Plant-Based Protein 
+There is an ongoing debate about the health impacts of animal- versus plant-based proteins. Research shows that animal proteins support better muscle synthesis due to their amino acid content (van Vliet et al., 2015), though plant-based diets may reduce chronic disease risks and have lower environmental impacts (Godfray et al., 2018). Economic factors influence these dietary choices, with lower-income populations relying more on plant proteins, while wealthier countries tend to consume more animal products. 
+
+### Dietary Uncertainty and Global Health Guidelines 
+Despite extensive research, no consensus exists on the “best” diet for health. Katz and Meller (2014) argue that minimally processed, plant-based diets are most strongly linked to health promotion. However, macronutrient intake varies globally, making universal dietary recommendations challenging. 
 
 
-# Methodology {#methodology}
+# Methodology
+## Data Sources
+### Nutritional Intake Data
+For this analysis, we utilized three different datasets, which were merged and cleaned to provide insights into life expectancy, nutritional intake, and the geographical context of each country. The datasets are as follows: 
 
-<a name="methodology"></a>
+The dataset used in this analysis is from the Food and Agriculture Organization (FAO) of the United Nations and contains information on a country’s food supply. It provides data on various food items—covering both primary and processed commodities that are potentially available for human consumption—and details their sources and utilization. 
 
-*Detail the steps taken to clean and prepare the data for analysis. Include any data transformations, handling of missing values, and data merging.*
+The dataset contains 32,910 rows and 15 columns and is formatted in long format. It spans the period from 2010 to 2022 and includes key variables such as: 
 
-# Results and Discussion {#results-and-discussion}
+>* Country: The country from which the data is collected.
+>* Element: The macronutrient value in grams or kilocalories per capita per day.
+>* Item: The type of food item, specifying whether it is a vegetable, meat, or other source.
+>* Year of Consumption: The year for which the data is recorded.
 
-<a name="results-and-discussion"></a>
+This dataset is valuable for analyzing patterns in nutritional intake and how they relate to health outcomes such as life expectancy across different geographic regions. The organized structure of the dataset allows for longitudinal and cross-country comparisons of dietary patterns and nutritional trends.
 
+### Life Expectancy Data
+The dataset titled “Life Expectancy from 2000 to 2021” from the World health Organisation provides data on life expectancy trends across countries. It contains 24420 rows and 34 columns and spans the years from 2000 to 2021. The data is structured in a long format.
+
+Key variables that we used from this dataset: 
+>* Country: The country for which life expectancy data is recorded. 
+>* Year: The year corresponding to the life expectancy data. 
+>* Life Expectancy: The average life expectancy at birth for each country in years. 
+
+### Geographical Data:
+The third dataset includes the geographical coordinates of the capital cities of the countries, which was used to map and visualize the location of each country in relation to the life expectancy and nutritional intake data.
+
+## Data Preparation
+To ensure the datasets were ready for analysis, several preprocessing steps were taken: 
+
+### Data Cleaning
+__Handling Missing Values:__ We identified and addressed missing values in the datasets. Fortunately, there were no missing values in the critical columns that were necessary for our analysis. 
+
+__Dropping Unnecessary Variables__: Any variables not relevant to our analysis were removed to streamline the data and focus on the essential components. 
+
+### Data Transformation
+The data was transformed to ensure consistency across all datasets. For example, variables such as nutritional intake were normalized to ensure comparability between countries with varying population sizes.
+
+### Data Merging:
+#### Joining Datasets:
+The three datasets were merged using the country variable as the key. This allowed for the integration of life expectancy, nutritional intake, and geographic information into a single dataset.
+
+For our analysis, we categorized countries into three groups based on life expectancy:
+>* Top 10 countries with the highest life expectancy.
+>* Middle 10 countries with life expectancy in the middle range.
+>* Bottom 10 countries with the lowest life expectancy.
+
+### Countries of Focus {.tabset}
+
+#### Top 10
+```{r Top 10 Countries, echo=FALSE, warning=FALSE}
+top_disp <- top_10 %>% select(Country, Capital.City, Life.Expectancy, Value)
+top_disp <- top_disp %>% 
+  rename(Caloric_Intake = Value)%>% 
+  rename(Life_Expectancy = Life.Expectancy)%>% 
+  rename(Capital_City = Capital.City)
+
+kable(top_disp, caption = "Top 10 Countries by Life Expectancy") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center")
+```
+#### Middle 10
+```{r Middle 10 Countries, echo=FALSE, warning=FALSE}
+mid_disp <- mid_10 %>% select(Country, Capital.City, Life.Expectancy, Value)
+mid_disp <- mid_disp %>% 
+  rename(Caloric_Intake = Value)%>% 
+  rename(Life_Expectancy = Life.Expectancy)%>% 
+  rename(Capital_City = Capital.City)
+
+kable(mid_disp, caption = "Middle 10 Countries by Life Expectancy") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center")
+```
+#### Bottom 10
+```{r Bottom 10 Countries, echo=FALSE, warning=FALSE}
+
+bot_disp <- bot_10 %>% select(Country, Capital.City, Life.Expectancy, Value)
+bot_disp <- bot_disp%>% 
+  rename(Caloric_Intake = Value)%>% 
+  rename(Life_Expectancy = Life.Expectancy)%>% 
+  rename(Capital_City = Capital.City)
+
+kable(bot_disp, caption = "Bottom 10 Countries by Life Expectancy") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center")
+```
+### Data Analysis
+#### Descriptive Analysis
+___Nutritional Intake:___
+We analyzed the nutritional intake for each country group over time, focusing on key macronutrients such as fat, protein, and carbohydrates. This helped identify trends in dietary intake that may correlate with life expectancy. Further analysis included more specific macronutrients, such as Animal vs. vegetal intake, Protein sources.  
+
+### Model:
+#### Visualizations:
+Visualizations were created using the ggplot2 package in R, while ensuring that all plots were color-blind safe. Whenever possible, interactive visualizations were produced to enhance user interaction and provide additional insights.
+
+## Use of Generative AI
+We used ChatGPT as our Generative AI tool during our work on R tasks, which presented both opportunities and challenges. One challenge we faced was handling data effectively, especially when we wanted to use specific methods introduced during the course, such as data wrangling with dplyr or visualizations with ggplot2. While it was up to us to decide how to approach the tasks, we preferred to follow these methods to maintain consistency with what we had learned. However, when we asked ChatGPT for assistance, it sometimes suggested alternative approaches using different packages or methods, which did not always align with our chosen way of working. This required us to manually adjust the AI’s suggestions to match our goals.
+
+An important aspect of using ChatGPT was the need to clearly and explicitly state our objectives. For example, when we asked for help with data preprocessing, ChatGPT often didn’t fully grasp the context or the specific transformations we needed. As a result, it occasionally generated solutions that weren’t quite suited to our dataset or analysis. We had to carefully communicate exactly what we wanted to achieve and refine the questions we posed to get more relevant output.
+
+That said, ChatGPT proved useful for simpler tasks, such as generating code for basic data cleaning or debugging common errors. However, we consistently had to double-check the output to ensure it met our needs, especially when the AI’s suggestions diverged from the methods we wanted to use. This experience highlighted the importance of clear communication and human oversight when integrating AI into the workflow, ensuring that the results were aligned with our project’s specific goals and methods.
+
+# Results and Discussion
+## ___RQ1: How does life expectancy and caloric intake compare geographically across countries?___</br>
+
+### Geographical Patterns of Life Expectancy and Nutritional Intake
 ```{r Countries by Mean Life Expectancy (2021), warning=FALSE, echo=FALSE}
 
 # Plot 1 - Life expectancy per country in each group
@@ -228,7 +358,7 @@ ggplotly(p1, tooltip = "text")
 ```
 _Plot 1: Countries by Mean Life Expectancy_
 
-
+</br>
 
 ```{r Map, echo=FALSE, warning=FALSE}
 #### Map
@@ -273,12 +403,11 @@ map
 ```
 _Plot 2: World Map of Categorized Countries_
 
+Plot 1 illustrates life expectancy for countries in the top 10, middle 10, and bottom 10 categories. The accompanying map (Plot 2) geographically locates countries from these three groups. Hovering over the dots on the map or the bars in the chart reveals details for each country, such as the country name, its average life expectancy, and the average caloric intake.
 
-Plot 1 illustrates life expectancy for countries in the top 10, middle 10, and bottom 10 categories. The accompanying map (Plot 2) geographically locates countries from these three groups. Hovering over the dots on the map or the bars in the chart reveals details for each country, such as the country name, its average life expectancy, and the average caloric intake. 
+From the bar chart, we observe that Japan leads in life expectancy, followed closely by South Korea, Spain, and France. Noticeably, the gap in life expectancy between the countries in the top and middle categories is relatively small. There is a more significant decline in life expectancy when we compare the life expectancy of countries from the middle group with the bottom group. The countries in the bottom category are predominantly located in Africa, particularly near the equator or in southern regions. In contrast, the middle group of countries includes nations from Asia, Africa, and Latin America, reflecting a more geographically diverse mix.
 
-From the bar chart, we observe that Japan leads in life expectancy, followed closely by South Korea, Spain, and France. Noticeably, the gap in life expectancy between the countries in the top and middle categories is relatively small. There is a more significant decline in life expectancy when we compare the life expectancy of countries from the middle group with the bottom group. The countries in the bottom category are predominantly located in Africa, particularly near the equator or in southern regions. In contrast, the middle group of countries includes nations from Asia, Africa, and Latin America, reflecting a more geographically diverse mix. 
-
-The countries from the top category are more dispersed, covering Europe, the Middle East, East Asia, and Oceania. Upon first inspection, it becomes evident that the countries in the top category are primarily from the developed world, while the middle category includes less developed countries, and the bottom category comprises the least developed nations. 
+The countries from the top category are more dispersed, covering Europe, the Middle East, East Asia, and Oceania. Upon first inspection, it becomes evident that the countries in the top category are primarily from the developed world, while the middle category includes less developed countries, and the bottom category comprises the least developed nations.
 
 
 ```{r Change in Life Expectancy 2010-2021, echo=FALSE, warning=FALSE}
@@ -300,7 +429,7 @@ int_plot_life_exp_display <- ggplotly(int_plot_life_exp, tooltip = "text")
 int_plot_life_exp_display
 
 ```
-_Plot 3: Change in Life Expectancy 2015-2021_
+_Plot 3: Change in Life Expectancy 2010-2021_
 
 To get a closer look at the developments of life expectancy between 2010 and 2021, let’s consider plot 3. Each line in the chart represents one country, and hovering over it displays details such as the country name and specific data points. The plot shows that countries from the top and middle categories have relatively similar life expectancy, while there is a bigger gap to the countries in the bottom category.  
 
@@ -312,6 +441,7 @@ The gap between the middle and bottom countries is relatively large. While both 
 
 This plot shows that life expectancy has risen globally over the past decade, the effects of external factors such as the COVID-19 pandemic have caused noticeable disruptions, particularly in less developed nations. These trends highlight the importance of addressing healthcare inequities, especially in the wake of global crises.
 
+### Overall Caloric Intake and its Relationship with Life Expectancy
 ```{r Change in Caloric Intake 2010-2021, echo=FALSE, warning=FALSE}
 int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, colour = Category, group = Country, text = Country)) +
   geom_line(size = 1) +  
@@ -340,7 +470,9 @@ __From these initial observations, we can condense three main points:__
 
 - The bottom 10 countries also show an increase in life expectancy over the years, but their caloric intake has declined slightly. Despite consuming fewer calories, these countries have managed to improve their life expectancy, indicating that factors beyond nutrition—such as healthcare access and disease prevention—could be contributing to these gains.
 
+## ___RQ2: How do different macronutrient ratios influence life expectancy?___</br>
 
+### The Influence of Macronutrient Consumption on Life Expectancy
 ```{r Nutritional Profile Comparison - setup, echo=FALSE, warning=FALSE, message=FALSE}
 facet_labels <- c(
   "Protein supply quantity (g/capita/day)" = "Protein Intake",
@@ -365,8 +497,285 @@ ggplot(macro_df, aes(x = Calories, y = Life.Expectancy, color = Category)) +
   theme_minimal()
 ```
 
-_Plot 4: Nutritional Profile Comparison_
+_Plot 5: Nutritional Profile Comparison_
+
+With this initial observation, we can consider the second research question and ask, if the consumption of different macronutrients might impact life expectancy. Plot 5 illustrates the nutritional profile for each life expectancy category, displaying the average intake of fat, protein, and total caloric intake per day from 2010 to 2021.
+
+As expected, countries with the highest life expectancy also have the highest overall caloric intake, followed by the middle category, with the bottom category lagging behind. The top and middle countries have shown a steady increase in fat consumption over the years. Also, in the top and middle groups, caloric intake is either gradually increasing or remaining relatively stable. However, the bottom category shows a decline in overall caloric intake, while fat and protein intake – important nutritional components - remain more or less constant.
+
+At this stage, it becomes difficult to draw a direct relationship between life expectancy and caloric intake. While the data for the top and middle categories might suggest that higher food intake leads to higher life expectancy, the bottom group raises questions about the impact of other factors. For the bottom category, where food intake (particularly total calories) has decreased, life expectancy continues to rise (see plot …). This leads to speculation about whether factors such as healthcare, hygiene, or other social determinants are playing a more significant role than nutrition alone.
+
+### Caloric Intake and the Complexities of Life Expectancy
+
+```{r Average Intake across Different Countries, echo=FALSE, warning=FALSE, message=FALSE}
+element_labels <- c(
+  "Protein supply quantity (g/capita/day)" = "Protein",
+  "Fat supply quantity (g/capita/day)" = "Fat",
+  "Food supply (kcal/capita/day)" = "Total Calories"
+)
+# Stacked bar plot
+
+avg_nutrient_by_country <- macro_df %>%
+  group_by(Country, Element) %>%
+  summarize(Average_Intake = mean(Calories, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(Highlight = ifelse(Country %in% focus_df$Country[focus_df$Category == "Top"], "Top", "Other"))
+
+# Step 2: Create a stacked bar plot with conditional coloring
+ggplot(avg_nutrient_by_country, aes(x = reorder(Country, -Average_Intake), y = Average_Intake, fill = Element)) +
+  geom_bar(stat = "identity", aes(alpha = Highlight)) +
+  scale_alpha_manual(values = c("Top" = 1, "Other" = 0.3), guide = "none") +  # Highlight Top countries
+  labs(title = "Average Macronutrient Intake by Country",
+       x = "Country",
+       y = "Average Intake (kcal)") +
+  scale_fill_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                               "Fat supply quantity (g/capita/day)" = color_fats, 
+                               "Food supply (kcal/capita/day)" = color_cals),
+                    labels = element_labels,
+                    name = "Macronutrient") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+_Plot 6: Average intake across different countries_
+
+While the previous plots might lead to the assumption that higher caloric intake is tied to a higher life expectancy, Plot 6 demonstrates that this is not necessarily the case. This plot provides a detailed view of all the countries under focus, showing their average caloric intake, broken down into fat, protein, and total calories.
+
+In this plot, the more saturated bars represent the countries from the top 10 life expectancy group, while the lighter bars correspond to countries in the middle and bottom groups. Countries from the top 10 are more concentrated on the left side of the plot, confirming that, on average, they tend to consume more calories. However, an interesting anomaly is Japan, the country with the highest life expectancy, which ranks only 17th out of the 30 countries in terms of daily caloric intake.
+
+Similarly, Lesotho, which has the lowest life expectancy, does not have the lowest caloric intake, further suggesting that there are other contributing factors beyond daily caloric consumption that influence life expectancy. This emphasizes the need to consider other variables such as healthcare quality, access to clean water, and disease prevalence when analyzing the relationship between nutrition and longevity.
+
+Thus, while caloric intake appears to play some role in life expectancy, this plot highlights the complexities of nutrition and its varied effects across countries, where high caloric intake does not always correspond to a longer life.
+
+## ___RQ3: What is the impact of a plant- versus animal-based diet on life expectancy?___ </br>
+### Animal and Vegetal-Based Product Consumption Across Life Expectancy Categories
+```{r Average Daily Calories Consumed from Animal vs Veg Products, echo=FALSE, warning=FALSE, message=FALSE}
+filtered_df_vegetal_animal_prod <- focus_df %>%
+  filter(Element == "Food supply (kcal/capita/day)" &
+           (Item == "Vegetal Products" | Item == "Animal Products"))
+
+# Summarize the data by Country, Year, Category, and include Life Expectancy
+filtered_df_vegetal_animal_prod_ratio <- filtered_df_vegetal_animal_prod %>%
+  group_by(Country, Year, Category) %>%
+  summarise(
+    Vegetal = sum(Value[Item == "Vegetal Products"], na.rm = TRUE),
+    Animal = sum(Value[Item == "Animal Products"], na.rm = TRUE),
+    Ratio_Vegetal_Animal = Vegetal / Animal,
+    Life_Expectancy = first(Life.Expectancy),  # Include Life Expectancy
+    .groups = 'drop'  # To prevent dplyr summarise warning about grouping
+  )
+
+averaged_data <- filtered_df_vegetal_animal_prod_ratio %>%
+  group_by(Year, Category) %>%
+  summarise(
+    Avg_Vegetal = mean(Vegetal, na.rm = TRUE),
+    Avg_Animal = mean(Animal, na.rm = TRUE)
+  )
+
+# Reshape data for ggplot (long format) and rename Product Types
+averaged_data_long <- averaged_data %>%
+  pivot_longer(cols = c(Avg_Vegetal, Avg_Animal), 
+               names_to = "Product Type", 
+               values_to = "Avg_Calories_Consumed") %>%
+  mutate(`Product Type` = recode(`Product Type`,
+                                 "Avg_Vegetal" = "Average Vegetal Products",
+                                 "Avg_Animal" = "Average Animal Products"))
+
+# Create the base ggplot2 bar plot with updated labels and hover text
+p_avg_bar <- ggplot(averaged_data_long, aes(x = Year, y = Avg_Calories_Consumed, fill = `Product Type`, 
+                                            text = paste(`Product Type`, ":", round(Avg_Calories_Consumed, 2)))) +
+  geom_bar(stat = "identity", position = "dodge") +  # Bar chart with dodged position for Animal and Vegetal
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_fill_manual(values = c("Average Vegetal Products" = color_mid, "Average Animal Products" = color_bot)) + # Use custom colors for products
+  labs(
+    title = "Average Daily Calories Consumed from Animal vs. Vegetal Products per Category Over Time",
+    x = "Year",
+    y = "Average Daily Calories Consumed in kcal"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "top")  # Position the legend at the top
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_avg_plot_bar <- ggplotly(p_avg_bar, tooltip = "text")
+
+# Display the interactive plot
+interactive_avg_plot_bar
+
+```
+_Plot 7: Average Daily Calories Consumed from Animal vs Vegetal Products_
+
+Plot 6 provides a closer look of the proportion of calories consumed from animal and plant-based products across the three life expectancy categories. The results in the plot align with previous observations that countries in the top life expectancy category consume the most calories, but reveals that the highest proportion of those calories come from animal products.
+
+When looking at the top category, it is noticeable that the intake of both animal and plant-based products has remained relatively stable over time, although there has been a slight rise in animal product consumption. The middle category, however, shows a more significant increase in the consumption of both animal and plant-based products over recent years. This increase might be tied to economic growth and rising wealth among the populations in these countries. As animal products tend to be more expensive, it is probable that as incomes rise, people can afford to incorporate more of these foods into their diets. Another factor might be the increased accessibility of these products due to globalization, which has made food sources from across the world more available to these countries.
+
+The bottom category presents a contrasting pattern, with a slight drop in plant-based product consumption and stable consumption of animal products over the years. This stability in animal product consumption, despite the drop in overall caloric intake, could suggest that while access to food has diminished in quantity, the quality or type of available food has remained constant.
+
+The lack of significant growth in their consumption patterns could highlight the disparity between richer and poorer nations. Although we cannot see individual countries in this plot, the general trend suggests that these countries might be struggling with the economic and infrastructure challenges that restrict their access to diverse food sources.
+
+### Animal vs. Vegetal Product Ratios and Regional Dietary Patterns
+```{r Animal vs. Vegetal Product Ratios and Regional Dietary Patterns, echo=FALSE, message=FALSE, warning=FALSE}
+p <- ggplot(filtered_df_vegetal_animal_prod_ratio, 
+            aes(x = Year, y = Ratio_Vegetal_Animal, color = Category, group = Country, 
+                text = paste("Country:", Country, "<br>",
+                             "Ratio:", round(Ratio_Vegetal_Animal, 2), "<br>",
+                             "Life Expectancy:", Life_Expectancy))) +
+  geom_line() +  # Line for each country
+  geom_point() + # Points for each observation
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bottom, Mid, Top)
+  scale_color_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot)) + # Use custom colors
+  labs(
+    title = "Ratio of Animal vs. Vegetal Products Consumed per Country Over Time",
+    x = "Year",
+    y = "Ratio of Vegetal to Animal Products"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "none")  # Remove the legend
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_plot <- ggplotly(p, tooltip = "text")
+
+# Display the interactive plot
+interactive_plot
+```
+_Plot 8: Ratio of Animal vs. Vegetal Products_
+
+Plot 7 provides a more detailed breakdown of the ratio between animal and vegetal products consumed in each country. A lower ratio indicates that the consumption of animal and vegetal products is relatively equal, while a higher ratio suggests a greater difference between the two, with either animal or vegetal products dominating the diet.
+
+The countries in the top category show the lowest and most stable ratios, indicating that their diets are relatively balanced in terms of animal and vegetal product consumption. This balance has been maintained consistently over the years across all top-category countries. In the mid-category, the ratio has gradually dropped over time, indicating a trend toward a more balanced consumption of animal and plant products. Bulgaria stands out as an outlier in the middle category, where a significant drop in the ratio occurred between 2020 and 2021.
+
+The bottom category reveals the most intriguing developments in the ratio of animal to vegetal product consumption. The spread of ratios is the greatest here, with some countries, like Somalia, exhibiting low ratios, suggesting their diet is more similar to those of the top 10 countries. On the other hand, Mozambique shows a much higher ratio, indicating a diet more heavily reliant on plant-based foods compared to animal products.
+
+These differences in the ratios across countries may reflect various regional dietary patterns. While it might be expected that different regions have varied access to or preferences for animal and plant products, this is not the case across all categories. For example, countries from both the top and middle categories are geographically diverse (e.g. Switzerland in Europa and Japan in Asia), yet their ratios remain relatively stable. In contrast, all the bottom-category countries are in Africa, yet their ratios differ widely, suggesting that factors beyond region, such as economic access or cultural preferences, might influence these dietary patterns.
+
+Additionally, the development of these ratios over time is more volatile and less linear in the bottom category, hinting that these countries may experience shifts in their diets more frequently, possibly due to changing economic conditions or varying food availability.
+
+These findings underscore the complexity of food consumption patterns across different countries and suggest that changing eating habits, whether due to economic shifts, access to resources, or cultural influences, play a significant role in shaping these ratios.
+
+### Protein Consumption Patterns: Animal vs. Plant Sources
+```{r Animal vs. Plant Protein, echo=FALSE, message=FALSE, warning=FALSE}
+color_animal <- "#D55E00"
+color_vegetal <- "#56B4E9"
+
+# Calculate the average protein consumed per year for each category
+averaged_protein_data <- filtered_df_protein_summary %>%
+  group_by(Year, Category) %>%
+  summarise(
+    Avg_Protein_Vegetal = mean(Protein_Vegetal, na.rm = TRUE),
+    Avg_Protein_Animal = mean(Protein_Animal, na.rm = TRUE)
+  )
+
+# Reshape data for ggplot (long format)
+averaged_protein_data_long <- averaged_protein_data %>%
+  pivot_longer(cols = c(Avg_Protein_Vegetal, Avg_Protein_Animal), 
+               names_to = "Product_Type", 
+               values_to = "Avg_Protein_Consumed") %>%
+  mutate(Product_Type = recode(Product_Type,
+                               "Avg_Protein_Vegetal" = "Average Vegetal Protein",
+                               "Avg_Protein_Animal" = "Average Animal Protein"))
+
+# Create the base ggplot2 bar plot with facets for each category
+p_avg_protein_bar <- ggplot(averaged_protein_data_long, aes(x = Year, y = Avg_Protein_Consumed, fill = Product_Type, 
+                                                            text = paste(Product_Type, ":", round(Avg_Protein_Consumed, 2)))) +
+  geom_bar(stat = "identity", position = "dodge") +  # Bar chart with dodged position for Animal and Vegetal
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_fill_manual(values = c("Average Vegetal Protein" = color_vegetal, "Average Animal Protein" = color_animal)) + # Use custom colors
+  labs(
+    title = "Average Daily Protein Consumed from Animal vs. Vegetal Products Over Time by Category",
+    x = "Year",
+    y = "Average Daily Protein Consumed (g)"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "top")  # Position the legend at the top
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_avg_protein_plot <- ggplotly(p_avg_protein_bar, tooltip = "text")
+
+# Display the interactive plot
+interactive_avg_protein_plot
+```
+_Plot 9: Animal vs. Plant Protein_
+
+Plot 9 takes a deeper look at protein consumption by breaking down the sources—whether animal or vegetal. It highlights the part of protein sources consumed across the top, middle, and bottom life expectancy categories. When observing the blue bars, representing the average protein intake from vegetal sources, we see a similar pattern across all categories, with the highest bars for the middle category, followed by the top category, and finally the bottom category, which consumes the least amount of protein from vegetal sources.
+
+However, the most visible difference is in the intake of animal protein. The top countries consume significantly more protein from animal sources, with an average intake between 65 and 68 grams, and this trend is on the rise. The middle-category countries, while still consuming significant vegetal protein, have reached a point where animal protein intake has increased and even surpassed plant-based protein consumption. The bottom-category countries, on the other hand, show the lowest intake of animal protein, consuming only between 15 and 20 grams on average.
+
+These trends lead to important questions. As seen in other plots, the middle-category countries seem to shift toward consuming more animal protein as they develop economically. It aligns with the idea that as countries get wealthier, they can afford more animal products. Conversely, the bottom-category countries simply might not be able to afford animal protein, as it is too expensive for them, which may contribute to their reliance on plant-based protein.
+
+### Variations in Animal vs. Plant Protein Ratios Across Countries
+```{r Ratio of Animal vs. Plant Based, echo=FALSE, message=FALSE, warning=FALSE}
+# Plot 12: ratio of plant vs. animal protein with life expectancy for each country
+p_protein <- ggplot(filtered_df_protein_summary, 
+                    aes(x = Year, y = Ratio_Protein_Animal_Vegetal, color = Category, group = Country, 
+                        text = paste("Country:", Country, "<br>",
+                                     "Ratio:", round(Ratio_Protein_Animal_Vegetal, 2), "<br>",
+                                     "Life Expectancy:", Life_Expectancy))) +
+  geom_line() +  # Line for each country
+  geom_point() + # Points for each observation
+  facet_wrap(~ Category) +  # Separate plots for each Category (Bot, Mid, Top)
+  scale_color_manual(values = c("Top" = color_top, "Middle" = color_mid, "Bottom" = color_bot)) + # Use custom colors
+  labs(
+    title = "Ratio of Plant vs. Animal-Based Protein Consumed per Country Over Time",
+    x = "Year",
+    y = "Ratio of Animal to Vegetal Protein"
+  ) +
+  theme_minimal() +  # Minimal theme for better visual clarity
+  theme(legend.position = "none")  # Remove the legend
+
+# Convert the ggplot to an interactive plotly plot with updated hover text
+interactive_protein_plot <- ggplotly(p_protein, tooltip = "text")
+
+# Display the interactive plot
+interactive_protein_plot
+```
+_Plot 10: Ratio of Animal vs. Plant Based_
+
+Similar to Plot 9, Plot 10 illustrates the ratio of animal to plant-based protein intake across the top, middle, and bottom country categories. Interestingly, across all countries, the ratios are relatively volatile, with noticeable variation over the years.
+
+Starting with the top category, we observe that countries like Australia, Sweden, Switzerland, France, and Spain have the highest ratios, meaning that they derive most of their protein from animal sources. However, there seems to be a slight downward trend in the consumption of animal protein in these countries, indicating a shift towards more balanced choice of protein sources, or perhaps a reduction in animal product consumption altogether.
+
+Within the top category, there is a gap between these countries and others, such as Italy, Norway, Korea, Cyprus, and Japan, which tend to consume less animal protein, though their consumption is on the rise.
+
+In the middle category, there is no clear clustering or discernible pattern. The consumption of animal protein appears versatile and fluctuates over the years. Countries like Saint Lucia, for instance, consume a relatively high portion of animal protein, while Bangladesh, at the lower end, consumes as little animal protein as some of the bottom-category countries.
+
+The bottom category displays a wide range of consumption patterns as well. Some countries, like Zimbabwe, consume very low amounts of animal protein, though their intake is slowly rising. Interestingly, some bottom-category countries consume nearly as much animal protein as top-category countries. For instance, the consumption in Zimbabwe is approaching that of the top group, while others, like Niger, remain consistently low in their animal protein consumption.
+
+The variation in animal vs. plant protein consumption across these countries reflects not only economic differences but also shifts in dietary choices and access to different types of protein. The top countries may be choosing to reduce their animal protein intake, while bottom-category countries are still striving to afford more animal products, resulting in an interesting overlap in consumption patterns.
+
+### Comparison with Existing Literature on Caloric Intake and Longevity
+
+When comparing these findings with existing literature, some patterns align while others differ. Studies like Ekmekcioglu (2020) suggest that longevity is linked to dietary practices such as caloric restriction and nutrient-dense foods. However, the results here show that countries with the highest life expectancy also tend to consume the most calories, which contrasts with the literature advocating lower caloric intake for longevity.
+
+This suggests factors beyond caloric intake, such as healthcare access and diet quality, may play a key role. For instance, Japan, despite having the highest life expectancy, ranks lower in caloric intake, indicating that a balanced diet and lifestyle may be more important than calorie count alone. Additionally, life expectancy continues to rise in some lower-income countries despite decreasing caloric intake, further challenging the direct link between calories and longevity.
 
 
-# Conclusion {#conclusion}
-<a name="conclusion"></a>
+# Conclusion
+This report explored the relationship between life expectancy, nutrition, and dietary patterns across various countries, revealing several important insights. While countries with the highest life expectancy generally consume more calories, this finding does not fully align with the literature, which often promotes caloric restriction for longevity. Additionally, the balance between animal and plant-based protein consumption highlights the complex factors influencing life expectancy.
+
+Higher life expectancy countries exhibit not only greater caloric intake but also a more balanced diet, with economic and cultural factors playing a significant role. In contrast, some lower-income countries have managed to improve life expectancy despite lower caloric intake, suggesting that healthcare access, diet quality, and other social factors are crucial contributors to these outcomes.
+
+In conclusion, this analysis demonstrates that the relationship between nutrition and life expectancy is multifaceted. While caloric and protein intake are important, they must be understood within the broader context of healthcare, lifestyle, and socio-economic conditions.
+
+# References
+### Literature
+Cao, G., Liu, J., Liu, M., & Liang, W. (2023). Effects of the COVID-19 pandemic on life expectancy at birth at the global, regional, and national levels: A joinpoint time-series analysis.*Journal of Global Health*, 13. https://doi.org/10.7189/jogh.13.06042.
+
+Ekmekcioglu, C. (2020). Nutrition and longevity: From mechanisms to uncertainties. *Critical Reviews in Food Science and Nutrition*, 60(19), 3063–3082. https://doi.org/10.1080/10408398.2019.1676698
+
+Godfray, H. C. J., Aveyard, P., Garnett, T., Hall, J. W., Key, T. J., Lorimer, J., Pierrehumbert, R. T., Scarborough, P., Springmann, M., & Jebb, S. A. (2018). Meat consumption, health, and the environment. *Science*, 361(6399), eaam5324. https://doi.org/10.1126/science.aam5324
+
+Katz, D. L., & Meller, S. (2014). Can we say what diet is best for health? Annual Review of Public Health, 35, 83–103. https://doi.org/10.1146/annurev-publhealth-032013-182351
+
+Li, Y., Pan, A., Wang, D., Liu, X., Dhana, K., Franco, O., Kaptoge, S., Angelantonio, E., Stampfer, M., Willett, W., & Hu, F. (2018). Impact of healthy lifestyle factors on life expectancies in the US population. *Circulation*, 138(4), 345–355. https://doi.org/10.1161/CIRCULATIONAHA.117.032047
+
+Lieberman, H. R., Fulgoni, V. L., Agarwal, S., Pasiakos, S. M., & Berryman, C. E. (2020). Protein intake is more stable than carbohydrate or fat intake across various US demographic groups and international populations. *The American Journal of Clinical Nutrition*, 112(1), 180–186. https://doi.org/10.1093/ajcn/nqaa044
+
+van Vliet, S., Burd, N. A., & van Loon, L. J. C. (2015). The skeletal muscle anabolic response to plant- versus animal-based protein consumption. *The Journal of Nutrition*, 145(9), 1981–1991. https://doi.org/10.3945/jn.114.204305
+
+### Datasets
+FAOSTAT data on consumption per capita: </br>
+https://www.fao.org/faostat/en/#data/FBS 
+
+Life expectancy: </br>
+https://www.who.int/data/gho/data/indicators/indicator-details/GHO/life-expectancy-at-birth-(years) 
+
+Country Capital Lat/Lon list: </br>
+https://gist.github.com/ofou/df09a6834a8421b4f376c875194915c9#file-country-capital-lat-long-population-csv
