@@ -198,7 +198,10 @@ filtered_df_protein_summary <- filtered_df_protein %>%
 ```
 
 # Introduction
-Diet plays a crucial role in influencing health and longevity, with numerous studies emphasizing the importance of nutrition in extending life expectancy. A balanced intake of macronutrients—such as carbohydrates, fats, and proteins—has been consistently linked to improved health outcomes and increased lifespan. However, the relationship between dietary intake and life expectancy remains complex, as it is influenced by a variety of factors beyond nutrition, including healthcare access, socio-economic conditions, and lifestyle choices. 
+Diet plays a vital role in influencing health and longevity. A balanced intake of macronutrients—such as carbohydrates, fats, and proteins—has been linked to increased life expectancy. However, the relationship between nutrition and longevity is complex, influenced by factors like healthcare, socio-economic conditions, and lifestyle.
+
+This analysis explores whether macronutrient intake, particularly caloric consumption and the balance of animal- versus plant-based proteins, correlates with life expectancy across countries. 
+The research questions driving this analysis include:
 
 >_1. How does life expectancy and caloric intake compare geographically across countries?_<br>
 >_2. How do different macronutrient ratios influence life expectancy?_<br>
@@ -206,46 +209,43 @@ Diet plays a crucial role in influencing health and longevity, with numerous stu
 
 The objective is to understand how the consumption of certain macronutrients affects life expectancy, focusing on three country groups ranked by life expectancy (top 10, middle 10, and bottom 10 countries). This analysis seeks to uncover patterns that explain the relationship between diet and longevity, providing insights relevant for policymakers, healthcare professionals, and nutritionists. 
 
-Contrary to some studies advocating caloric restriction, we found that countries with higher life expectancy often consume more calories. This suggests that calorie quality and access to healthcare may be more influential than calorie quantity. Additionally, countries with higher life expectancy consumed more animal-based proteins, which aligns with the theory that animal proteins support better overall health. Meanwhile, life expectancy in some lower-income countries continues to rise despite lower caloric intake, highlighting the importance of potential factors like healthcare access. 
+Contrary to some studies advocating caloric restriction, we found that countries with higher life expectancy often consume more calories. This suggests that calorie quality and access to healthcare may be more influential than calorie quantity. Additionally, countries with higher life expectancy consumed more animal-based proteins, which aligns with the theory that animal proteins support better overall health. Meanwhile, life expectancy in some lower-income countries continues to rise despite lower caloric intake, highlighting the importance of potential factors like healthcare access.
 
-This report shows limitations that are severalfold. While diet is a key factor, other elements like healthcare, food accessibility, and socio-economic conditions also affect longevity. The quality and availability of data may also vary between countries, potentially influencing the results. 
+This report shows potential limitations that are severalfold. While diet is a key factor, other elements like healthcare, food accessibility, and socio-economic conditions also affect longevity. The quality and availability of data may also vary between countries, potentially influencing the results.
 
 
 # Theoretical Focus
-Understanding the nutritional drivers of life expectancy requires examining the influence of nutrition and dietary patterns. Research highlights the importance of health-related behaviors—such as maintaining a healthy BMI, regular physical activity, and a nutritious diet—in extending life expectancy. For instance, Li et al. (2018) found that adopting these factors could extend life by up to 14 years for women and 12 years for men compared to those with higher-risk behaviors. 
+Understanding the nutritional drivers of life expectancy requires examining the influence of nutrition and dietary patterns. Research highlights the importance of health-related behaviours—such as maintaining a healthy BMI, regular physical activity, and a nutritious diet—in extending life expectancy. For instance, Li et al. (2018) found that adopting these factors could extend life by up to 14 years for women and 12 years for men compared to those with higher-risk behaviours.
 
-Diet plays a crucial role in longevity. Specific dietary habits, such as caloric and methionine restriction, are linked to longer lifespans and reduced mortality (Ekmekcioglu, 2020). The consumption of whole grains, vegetables, fruits, nuts, and coffee has consistently been associated with increased lifespan and improved health outcomes. 
+Diet plays a crucial role in longevity. Specific dietary habits, such as caloric and methionine restriction, are linked to longer lifespans and reduced mortality (Ekmekcioglu, 2020). The consumption of whole grains, vegetables, fruits, nuts, and coffee has consistently been associated with increased lifespan and improved health outcomes.
 
 ### Macronutrient Balance and Global Variability 
-Macronutrient intake, which includes proteins, carbohydrates, and fats, plays a significant role in public health. While protein intake remains stable globally, carbohydrate and fat consumption vary more widely across regions, reflecting economic and cultural differences (Lieberman et al., 2020). The WHO recommends limiting fat to 30% of total energy intake, prioritizing whole grains, vegetables, and fruits in diets—key elements of many healthful dietary patterns. 
+Macronutrient intake, which includes proteins, carbohydrates, and fats, plays a significant role in public health. While protein intake remains relatively stable globally, carbohydrate and fat consumption vary more widely across regions, reflecting economic and cultural differences (Lieberman et al., 2020). The WHO recommends limiting fat to 30% of total energy intake, prioritizing whole grains, vegetables, and fruits in diets.
 
 ### Animal vs. Plant-Based Protein 
-There is an ongoing debate about the health impacts of animal- versus plant-based proteins. Research shows that animal proteins support better muscle synthesis due to their amino acid content (van Vliet et al., 2015), though plant-based diets may reduce chronic disease risks and have lower environmental impacts (Godfray et al., 2018). Economic factors influence these dietary choices, with lower-income populations relying more on plant proteins, while wealthier countries tend to consume more animal products. 
+There is an ongoing debate about the health impacts of animal- versus plant-based proteins. Research shows that animal proteins support better muscle synthesis due to their amino acid content (van Vliet et al., 2015), though plant-based diets may reduce chronic disease risks and have lower environmental impacts (Godfray et al., 2018). Economic factors influence these dietary choices, with lower-income populations relying more on plant proteins, while wealthier countries tend to consume more animal products.
 
-### Dietary Uncertainty and Global Health Guidelines 
-Despite extensive research, no consensus exists on the “best” diet for health. Katz and Meller (2014) argue that minimally processed, plant-based diets are most strongly linked to health promotion. However, macronutrient intake varies globally, making universal dietary recommendations challenging. 
+### Dietary Uncertainty
+Despite extensive research, no consensus exists on the “best” diet for health. Katz and Meller (2014) argue that minimally processed, plant-based diets are most strongly linked to health promotion. However, macronutrient intake varies globally, making universal dietary recommendations challenging.
 
 
 # Methodology
 ## Data Sources
+For this analysis, we utilized three different datasets, which were merged and cleaned to provide insights into life expectancy, nutritional intake, and the geographical context of each country. The datasets are as follows:
 ### Nutritional Intake Data
-For this analysis, we utilized three different datasets, which were merged and cleaned to provide insights into life expectancy, nutritional intake, and the geographical context of each country. The datasets are as follows: 
+This dataset is from the Food and Agriculture Organization (FAO) of the United Nations and contains information on a country’s food supply. It provides data on various food items—covering both primary and processed commodities that are potentially available for human consumption—and details their sources and utilization.
 
-The dataset used in this analysis is from the Food and Agriculture Organization (FAO) of the United Nations and contains information on a country’s food supply. It provides data on various food items—covering both primary and processed commodities that are potentially available for human consumption—and details their sources and utilization. 
-
-The dataset contains 32,910 rows and 15 columns and is formatted in long format. It spans the period from 2010 to 2022 and includes key variables such as: 
+The dataset contains 32,910 rows and 15 columns and is formatted in long format. It spans the period from 2010 to 2021. The key variables used for our analysis are:
 
 >* Country: The country from which the data is collected.
 >* Element: The macronutrient value in grams or kilocalories per capita per day.
 >* Item: The type of food item, specifying whether it is a vegetable, meat, or other source.
 >* Year of Consumption: The year for which the data is recorded.
 
-This dataset is valuable for analyzing patterns in nutritional intake and how they relate to health outcomes such as life expectancy across different geographic regions. The organized structure of the dataset allows for longitudinal and cross-country comparisons of dietary patterns and nutritional trends.
-
 ### Life Expectancy Data
 The dataset titled “Life Expectancy from 2000 to 2021” from the World health Organisation provides data on life expectancy trends across countries. It contains 24420 rows and 34 columns and spans the years from 2000 to 2021. The data is structured in a long format.
 
-Key variables that we used from this dataset: 
+Key variables that we used from this dataset:
 >* Country: The country for which life expectancy data is recorded. 
 >* Year: The year corresponding to the life expectancy data. 
 >* Life Expectancy: The average life expectancy at birth for each country in years. 
@@ -265,9 +265,9 @@ __Dropping Unnecessary Variables__: Any variables not relevant to our analysis w
 The data was transformed to ensure consistency across all datasets. For example, variables such as nutritional intake were normalized to ensure comparability between countries with varying population sizes.
 
 ### Data Merging:
-#### Joining Datasets:
 The three datasets were merged using the country variable as the key. This allowed for the integration of life expectancy, nutritional intake, and geographic information into a single dataset.
 
+### Data Manipulation
 For our analysis, we categorized countries into three groups based on life expectancy:
 >* Top 10 countries with the highest life expectancy.
 >* Middle 10 countries with life expectancy in the middle range.
@@ -315,16 +315,26 @@ kable(bot_disp, caption = "Bottom 10 Countries by Life Expectancy") %>%
                 full_width = FALSE, 
                 position = "center")
 ```
+###
+Within these groups, we focused on analyzing the highest caloric intake for each year available in the dataset. Additionally, for life expectancy, we selected the most recent and highest value for each country to ensure that our analysis reflected the best available data for each country over the period of study.
+
 ### Data Analysis
-#### Descriptive Analysis
-___Nutritional Intake:___
-We analyzed the nutritional intake for each country group over time, focusing on key macronutrients such as fat, protein, and carbohydrates. This helped identify trends in dietary intake that may correlate with life expectancy. Further analysis included more specific macronutrients, such as Animal vs. vegetal intake, Protein sources.  
+We analyzed the nutritional intake for each country group over time, focusing on key macronutrients such as fat, protein, and carbohydrates. This helped identify trends in dietary intake that may correlate with life expectancy. Further analysis included more specific macronutrients, such as Animal vs. vegetal intake, Protein sources.
 
-### Model:
-#### Visualizations:
-Visualizations were created using the ggplot2 package in R, while ensuring that all plots were color-blind safe. Whenever possible, interactive visualizations were produced to enhance user interaction and provide additional insights.
+Visualizations were created using mostly the ggplot2 package in R, while ensuring that all plots were color-blind safe. Whenever possible, interactive visualizations were produced to enhance user interaction and provide additional insights.
 
-## Use of Generative AI
+As part of our analysis, we ran a simple linear regression model to analyze the trend in global life expectancy over time. In this model, life expectancy was used as the dependent variable, while the year was set as the independent variable. This approach allowed us to examine whether there was a consistent increase in life expectancy from 2010 to 2021.
+
+### Limitations of our approach
+With these datasets come several limitations that need to be acknowledged in our analysis. First, it is important to recognize that the nutritional intake data for every individual in a country cannot be perfectly captured. As a result, the quality and accuracy of the data may vary across countries, and data collection in certain regions may be more challenging due to accessibility issues.
+
+Furthermore, there is some uncertainty regarding how the data was collected. It is unclear whether macronutrient intakes were self-reported by individuals or gathered by the respective organizations through other means, which could affect the reliability of the data.
+
+Within countries, there may also be significant regional differences in nutritional intake and life expectancy, which are not accounted for in this analysis. By aggregating countries into top, middle, and bottom categories, we risk oversimplifying complex factors. This approach might mask important nuances in dietary habits and life expectancy trends that are specific to individual regions or countries.
+
+Additionally, while this report primarily focuses on the role of nutrition, it is essential to note that non-dietary factors—such as healthcare access, education, and socio-economic conditions—also play a significant role in influencing life expectancy (as discussed in the Theoretical Focus section).
+
+### Use of Geerative AI
 We used ChatGPT as our Generative AI tool during our work on R tasks, which presented both opportunities and challenges. One challenge we faced was handling data effectively, especially when we wanted to use specific methods introduced during the course, such as data wrangling with dplyr or visualizations with ggplot2. While it was up to us to decide how to approach the tasks, we preferred to follow these methods to maintain consistency with what we had learned. However, when we asked ChatGPT for assistance, it sometimes suggested alternative approaches using different packages or methods, which did not always align with our chosen way of working. This required us to manually adjust the AI’s suggestions to match our goals.
 
 An important aspect of using ChatGPT was the need to clearly and explicitly state our objectives. For example, when we asked for help with data preprocessing, ChatGPT often didn’t fully grasp the context or the specific transformations we needed. As a result, it occasionally generated solutions that weren’t quite suited to our dataset or analysis. We had to carefully communicate exactly what we wanted to achieve and refine the questions we posed to get more relevant output.
@@ -332,6 +342,7 @@ An important aspect of using ChatGPT was the need to clearly and explicitly stat
 That said, ChatGPT proved useful for simpler tasks, such as generating code for basic data cleaning or debugging common errors. However, we consistently had to double-check the output to ensure it met our needs, especially when the AI’s suggestions diverged from the methods we wanted to use. This experience highlighted the importance of clear communication and human oversight when integrating AI into the workflow, ensuring that the results were aligned with our project’s specific goals and methods.
 
 # Results and Discussion
+In the following discussion, we will explore the key findings from the analysis and compare them with existing literature on nutrition and longevity. We will examine how caloric intake, macronutrient consumption, and the balance of plant- and animal-based proteins influence life expectancy across different countries. Additionally, we will discuss the disparities observed between high and low life expectancy countries.
 ## ___RQ1: How does life expectancy and caloric intake compare geographically across countries?___</br>
 
 ### Geographical Patterns of Life Expectancy and Nutritional Intake
@@ -403,13 +414,13 @@ map
 ```
 _Plot 2: World Map of Categorized Countries_
 
-Plot 1 illustrates life expectancy for countries in the top 10, middle 10, and bottom 10 categories. The accompanying map (Plot 2) geographically locates countries from these three groups. Hovering over the dots on the map or the bars in the chart reveals details for each country, such as the country name, its average life expectancy, and the average caloric intake.
+Plot 1 illustrates life expectancy for countries in the top 10, middle 10, and bottom 10 categories. The accompanying map (Plot 2) geographically locates countries from these three groups. Hovering over the dots on the map or the bars in the chart reveals details for each country, such as the country name, its average life expectancy, and the average caloric intake. 
 
-From the bar chart, we observe that Japan leads in life expectancy, followed closely by South Korea, Spain, and France. Noticeably, the gap in life expectancy between the countries in the top and middle categories is relatively small. There is a more significant decline in life expectancy when we compare the life expectancy of countries from the middle group with the bottom group. The countries in the bottom category are predominantly located in Africa, particularly near the equator or in southern regions. In contrast, the middle group of countries includes nations from Asia, Africa, and Latin America, reflecting a more geographically diverse mix.
+From the bar chart, we observe that Japan leads in life expectancy, followed closely by South Korea, Spain, and France. Noticeably, the gap in life expectancy between the countries in the top and middle categories is relatively small. There is a more significant decline in life expectancy when we compare the life expectancy of countries from the middle group with the bottom group. The countries in the bottom category are predominantly located in Africa, particularly near the equator or in southern regions. In contrast, the middle group of countries includes nations from Asia, Africa, and Latin America, reflecting a more geographically diverse mix. 
 
 The countries from the top category are more dispersed, covering Europe, the Middle East, East Asia, and Oceania. Upon first inspection, it becomes evident that the countries in the top category are primarily from the developed world, while the middle category includes less developed countries, and the bottom category comprises the least developed nations.
 
-
+## Trends in Life Expectancy Over the Last Decade
 ```{r Change in Life Expectancy 2010-2021, echo=FALSE, warning=FALSE}
 # Convert category to factor
 focus_df$Category <- factor(focus_df$Category, levels = c("Top", "Middle", "Bottom"))
@@ -431,13 +442,13 @@ int_plot_life_exp_display
 ```
 _Plot 3: Change in Life Expectancy 2010-2021_
 
-To get a closer look at the developments of life expectancy between 2010 and 2021, let’s consider plot 3. Each line in the chart represents one country, and hovering over it displays details such as the country name and specific data points. The plot shows that countries from the top and middle categories have relatively similar life expectancy, while there is a bigger gap to the countries in the bottom category.  
+To get a closer look at the developments of life expectancy between 2010 and 2021, let’s consider plot 3. Each line in the chart represents one country, and hovering over it displays details such as the country name and specific data points. The plot shows that countries from the top and middle categories have relatively similar life expectancy, while there is a bigger gap to the countries in the bottom category.
 
-Notably, life expectancy has generally risen over the last decade for countries in all three categories. However, a sharp drop is visible in 2020, which studies suggest may be attributed to the COVID-19 pandemic. According to Cao et al. (2023), global life expectancy declined by an average of 1.8 years due to the pandemic, with Latin America being the most affected region. 
+Notably, life expectancy has generally risen over the last decade for countries in all three categories. However, a sharp drop is visible in 2020, which studies suggest may be attributed to the COVID-19 pandemic. According to Cao et al. (2023), global life expectancy declined by an average of 1.8 years due to the pandemic, with Latin America being the most affected region.
 
-The impact of the pandemic is more pronounced in middle-category countries, where the drop in life expectancy was larger than in the top-category countries. This may be due to the varying levels of access to healthcare during the pandemic, though this is speculative and requires further investigation. In contrast, the countries in the top category countries experienced a less significant decline, perhaps because of better access to healthcare. 
+The impact of the pandemic is more pronounced in middle-category countries, where the drop in life expectancy was larger than in the top-category countries. This may be due to the varying levels of access to healthcare during the pandemic, though this is speculative and requires further investigation. In contrast, the countries in the top category countries experienced a less significant decline, perhaps because of better access to healthcare.
 
-The gap between the middle and bottom countries is relatively large. While both groups have seen improvements in life expectancy over the years, the bottom-category countries remain far behind. Only three countries of the bottom group —Somalia, Lesotho, and the Central African Republic—experienced a notable decline during the pandemic. 
+The gap between the middle and bottom countries is relatively large. While both groups have seen improvements in life expectancy over the years, the bottom-category countries remain far behind. Only three countries of the bottom group —Somalia, Lesotho, and the Central African Republic—experienced a notable decline during the pandemic.
 
 This plot shows that life expectancy has risen globally over the past decade, the effects of external factors such as the COVID-19 pandemic have caused noticeable disruptions, particularly in less developed nations. These trends highlight the importance of addressing healthcare inequities, especially in the wake of global crises.
 
@@ -477,9 +488,9 @@ ggplot(model_df_clean, aes(x = Year, y = Life.Expectancy)) +
 summary(model)
 ```
 ###
-In this plot we can see that life expectancy on a global level has been more or less consistently rising in the past years. Although the COVID-19 pandemic did affect life expectancy in most countries, we treated those values as outliers, as this data cannot be concluded to be a consistent factor in longevity on a worldwide level.
+In this plot we can see that life expectancy on a global level has been more or less consistently rising in the past years. Although the COVID-19 pandemic did affect life expectancy in most countries, we treated those values as outliers, as this data cannot be concluded to be a consistent factor in longevity on a worldwide level. 
 
-The summary of the model shows us that the rate of increase is about `0.11138` years of life expectancy every year that passes, if analyzed as a linear trend, with a non-insignificant p-value. This means that, on average, every year that goes by, humanity is expected to live around one month and 10 days longer than they were previously.
+The summary of the model shows us that the rate of increase is about `0.11138` years of life expectancy every year that passes, if analyzed as a linear trend, with a non-insignificant p-value. This means that, on average, every year that goes by, humanity is expected to live around one month and 10 days longer than they were previously. 
 
 ### Overall Caloric Intake and its Relationship with Life Expectancy
 ```{r Change in Caloric Intake 2010-2021, echo=FALSE, warning=FALSE}
@@ -498,7 +509,7 @@ int_plot_caloric_intake_display
 ```
 _Plot 4: Change in Caloric Intake 2010-2021_
 
-Next, when considering caloric intake, we see that countries in the top 10 life expectancy group also have the highest caloric intake, followed by the middle 10 countries, with the bottom 10 countries ingesting the least (plot 4). From this, a possible initial relationship emerges: countries with higher life expectancy also tend to consume more calories. 
+Next, when considering caloric intake, we see that countries in the top 10 life expectancy group also have the highest caloric intake, followed by the middle 10 countries, with the bottom 10 countries ingesting the least (plot 4). From this, a possible initial relationship emerges: countries with higher life expectancy also tend to consume more calories.
 
 However, when examined more closely, it becomes evident that the caloric intake for the top and middle countries is rising steadily, but at different rates. The middle countries show a sharper increase in caloric intake, which may reflect their improving economic and healthcare conditions. In contrast, the bottom 10 countries show a slight decline in caloric intake over the years, even as their life expectancy rises. This counterintuitive trend suggests that while caloric intake plays a role in life expectancy, other significant factors must also be at play. 
 
@@ -514,27 +525,18 @@ __From these initial observations, we can condense three main points:__
 
 ### The Influence of Macronutrient Consumption on Life Expectancy
 ```{r Nutritional Profile Comparison - setup, echo=FALSE, warning=FALSE, message=FALSE}
-facet_labels <- c(
-  "Protein supply quantity (g/capita/day)" = "Protein Intake",
-  "Fat supply quantity (g/capita/day)" = "Fat Intake",
-  "Food supply (kcal/capita/day)" = "Total Caloric Intake"
-)
-
-ggplot(macro_df, aes(x = Calories, y = Life.Expectancy, color = Category)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "Relationship Between Macronutrient Intake and Life Expectancy",
-       x = "Calories (kcal/capita/day)",
-       y = "Life Expectancy (years)") +
-  scale_color_manual(values = c("Top" = color_top, 
-                                "Middle" = color_mid, 
-                                "Bottom" = color_bot),
-                     labels = c("Top" = "Top 10",
-                                "Middle" = "Middle 10",
-                                "Bottom" = "Bottom 10"),
-                     name = "Group") +  # Change the legend title
-  facet_wrap(~ Element, labeller = labeller(Element = facet_labels)) +
-  theme_minimal()
+ggplot(avg_macro_by_group, aes(x = Year, y = Average_Calories, color = Element, group = Element)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ Category) +
+  labs(title = "Nutritional Profile Comparison (2010-2021)",
+       x = "Year",
+       y = "Average Daily Intake (kcal)") +
+  scale_color_manual(values = c("Protein supply quantity (g/capita/day)" = color_protein, 
+                                "Fat supply quantity (g/capita/day)" = color_fats, 
+                                "Food supply (kcal/capita/day)" = color_cals)) +
+  theme_minimal() +
+  theme(legend.position = "top")
 ```
 
 _Plot 5: Nutritional Profile Comparison_
@@ -543,7 +545,7 @@ With this initial observation, we can consider the second research question and 
 
 As expected, countries with the highest life expectancy also have the highest overall caloric intake, followed by the middle category, with the bottom category lagging behind. The top and middle countries have shown a steady increase in fat consumption over the years. Also, in the top and middle groups, caloric intake is either gradually increasing or remaining relatively stable. However, the bottom category shows a decline in overall caloric intake, while fat and protein intake – important nutritional components - remain more or less constant.
 
-At this stage, it becomes difficult to draw a direct relationship between life expectancy and caloric intake. While the data for the top and middle categories might suggest that higher food intake leads to higher life expectancy, the bottom group raises questions about the impact of other factors. For the bottom category, where food intake (particularly total calories) has decreased, life expectancy continues to rise (see plot …). This leads to speculation about whether factors such as healthcare, hygiene, or other social determinants are playing a more significant role than nutrition alone.
+At this stage, it becomes difficult to draw a direct relationship between life expectancy and caloric intake. While the data for the top and middle categories might suggest that higher food intake leads to higher life expectancy, the bottom group raises questions about the impact of other factors. For the bottom category, where food intake (particularly total calories) has decreased, life expectancy continues to rise (see plot 3). This leads to speculation about whether factors such as healthcare, hygiene, or other social determinants are playing a more significant role than nutrition alone.
 
 ### Caloric Intake and the Complexities of Life Expectancy
 
@@ -643,7 +645,7 @@ interactive_avg_plot_bar
 ```
 _Plot 7: Average Daily Calories Consumed from Animal vs Vegetal Products_
 
-Plot 6 provides a closer look of the proportion of calories consumed from animal and plant-based products across the three life expectancy categories. The results in the plot align with previous observations that countries in the top life expectancy category consume the most calories, but reveals that the highest proportion of those calories come from animal products.
+Plot 7 provides a closer look of the proportion of calories consumed from animal and plant-based products across the three life expectancy categories. The results in the plot align with previous observations that countries in the top life expectancy category consume the most calories, but reveals that the highest proportion of those calories come from animal products.
 
 When looking at the top category, it is noticeable that the intake of both animal and plant-based products has remained relatively stable over time, although there has been a slight rise in animal product consumption. The middle category, however, shows a more significant increase in the consumption of both animal and plant-based products over recent years. This increase might be tied to economic growth and rising wealth among the populations in these countries. As animal products tend to be more expensive, it is probable that as incomes rise, people can afford to incorporate more of these foods into their diets. Another factor might be the increased accessibility of these products due to globalization, which has made food sources from across the world more available to these countries.
 
@@ -678,7 +680,7 @@ interactive_plot
 ```
 _Plot 8: Ratio of Animal vs. Vegetal Products_
 
-Plot 7 provides a more detailed breakdown of the ratio between animal and vegetal products consumed in each country. A lower ratio indicates that the consumption of animal and vegetal products is relatively equal, while a higher ratio suggests a greater difference between the two, with either animal or vegetal products dominating the diet.
+Plot 8 provides a more detailed breakdown of the ratio between animal and vegetal products consumed in each country. A lower ratio indicates that the consumption of animal and vegetal products is relatively equal, while a higher ratio suggests a greater difference between the two, with either animal or vegetal products dominating the diet.
 
 The countries in the top category show the lowest and most stable ratios, indicating that their diets are relatively balanced in terms of animal and vegetal product consumption. This balance has been maintained consistently over the years across all top-category countries. In the mid-category, the ratio has gradually dropped over time, indicating a trend toward a more balanced consumption of animal and plant products. Bulgaria stands out as an outlier in the middle category, where a significant drop in the ratio occurred between 2020 and 2021.
 
@@ -768,7 +770,7 @@ interactive_protein_plot
 ```
 _Plot 10: Ratio of Animal vs. Plant Based_
 
-Similar to Plot 9, Plot 10 illustrates the ratio of animal to plant-based protein intake across the top, middle, and bottom country categories. Interestingly, across all countries, the ratios are relatively volatile, with noticeable variation over the years.
+Similar to Plot 8, Plot 10 illustrates the ratio of animal to plant-based protein intake across the top, middle, and bottom country categories. Interestingly, across all countries, the ratios are relatively volatile, with noticeable variation over the years.
 
 Starting with the top category, we observe that countries like Australia, Sweden, Switzerland, France, and Spain have the highest ratios, meaning that they derive most of their protein from animal sources. However, there seems to be a slight downward trend in the consumption of animal protein in these countries, indicating a shift towards more balanced choice of protein sources, or perhaps a reduction in animal product consumption altogether.
 
@@ -796,26 +798,23 @@ In conclusion, this analysis demonstrates that the relationship between nutritio
 
 # References
 ### Literature
-Cao, G., Liu, J., Liu, M., & Liang, W. (2023). Effects of the COVID-19 pandemic on life expectancy at birth at the global, regional, and national levels: A joinpoint time-series analysis.*Journal of Global Health*, 13. https://doi.org/10.7189/jogh.13.06042.
+Cao, G., Liu, J., Liu, M., & Liang, W. (2023). Effects of the COVID-19 pandemic on life expectancy at birth at the global, regional, and national levels: A joinpoint time-series analysis. Journal of Global Health, 13. https://doi.org/10.7189/jogh.13.06042.
 
-Ekmekcioglu, C. (2020). Nutrition and longevity: From mechanisms to uncertainties. *Critical Reviews in Food Science and Nutrition*, 60(19), 3063–3082. https://doi.org/10.1080/10408398.2019.1676698
+Ekmekcioglu, C. (2020). Nutrition and longevity: From mechanisms to uncertainties. Critical Reviews in Food Science and Nutrition, 60(19), 3063–3082. https://doi.org/10.1080/10408398.2019.1676698 
 
-Godfray, H. C. J., Aveyard, P., Garnett, T., Hall, J. W., Key, T. J., Lorimer, J., Pierrehumbert, R. T., Scarborough, P., Springmann, M., & Jebb, S. A. (2018). Meat consumption, health, and the environment. *Science*, 361(6399), eaam5324. https://doi.org/10.1126/science.aam5324
+Godfray, H. C. J., Aveyard, P., Garnett, T., Hall, J. W., Key, T. J., Lorimer, J., Pierrehumbert, R. T., Scarborough, P., Springmann, M., & Jebb, S. A. (2018). Meat consumption, health, and the environment. Science, 361(6399), eaam5324. https://doi.org/10.1126/science.aam5324 
 
-Katz, D. L., & Meller, S. (2014). Can we say what diet is best for health? Annual Review of Public Health, 35, 83–103. https://doi.org/10.1146/annurev-publhealth-032013-182351
+Katz, D. L., & Meller, S. (2014). Can we say what diet is best for health? Annual Review of Public Health, 35, 83–103. https://doi.org/10.1146/annurev-publhealth-032013-182351 
 
-Li, Y., Pan, A., Wang, D., Liu, X., Dhana, K., Franco, O., Kaptoge, S., Angelantonio, E., Stampfer, M., Willett, W., & Hu, F. (2018). Impact of healthy lifestyle factors on life expectancies in the US population. *Circulation*, 138(4), 345–355. https://doi.org/10.1161/CIRCULATIONAHA.117.032047
+Li, Y., Pan, A., Wang, D., Liu, X., Dhana, K., Franco, O., Kaptoge, S., Angelantonio, E., Stampfer, M., Willett, W., & Hu, F. (2018). Impact of healthy lifestyle factors on life expectancies in the US population. Circulation, 138(4), 345–355. https://doi.org/10.1161/CIRCULATIONAHA.117.032047 
 
-Lieberman, H. R., Fulgoni, V. L., Agarwal, S., Pasiakos, S. M., & Berryman, C. E. (2020). Protein intake is more stable than carbohydrate or fat intake across various US demographic groups and international populations. *The American Journal of Clinical Nutrition*, 112(1), 180–186. https://doi.org/10.1093/ajcn/nqaa044
+Lieberman, H. R., Fulgoni, V. L., Agarwal, S., Pasiakos, S. M., & Berryman, C. E. (2020). Protein intake is more stable than carbohydrate or fat intake across various US demographic groups and international populations. The American Journal of Clinical Nutrition, 112(1), 180–186. https://doi.org/10.1093/ajcn/nqaa044 
 
-van Vliet, S., Burd, N. A., & van Loon, L. J. C. (2015). The skeletal muscle anabolic response to plant- versus animal-based protein consumption. *The Journal of Nutrition*, 145(9), 1981–1991. https://doi.org/10.3945/jn.114.204305
+van Vliet, S., Burd, N. A., & van Loon, L. J. C. (2015). The skeletal muscle anabolic response to plant- versus animal-based protein consumption. The Journal of Nutrition, 145(9), 1981–1991. https://doi.org/10.3945/jn.114.204305
 
 ### Datasets
-FAOSTAT data on consumption per capita: </br>
-https://www.fao.org/faostat/en/#data/FBS 
+FAOSTAT. (2022). Food Balance Sheets (FBS): Macronutrient consumption per capita. Food and Agriculture Organization of the United Nations. Retrieved from https://www.fao.org/faostat/en/#data/FBS 
 
-Life expectancy: </br>
-https://www.who.int/data/gho/data/indicators/indicator-details/GHO/life-expectancy-at-birth-(years) 
+World Health Organization. (2022). Life expectancy at birth (years). Global Health Observatory (GHO) data. Retrieved from https://www.who.int/data/gho/data/indicators/indicator-details/GHO/life-expectancy-at-birth-(years)
 
-Country Capital Lat/Lon list: </br>
-https://gist.github.com/ofou/df09a6834a8421b4f376c875194915c9#file-country-capital-lat-long-population-csv
+GitHub Gist. (n.d.). Country Capital Lat/Lon list. Retrieved from </br> https://gist.github.com/ofou/df09a68348a421b4f376c875194915c9#file-country-capital-lat-long-population-csv
