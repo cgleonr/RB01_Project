@@ -232,6 +232,7 @@ Despite extensive research, no consensus exists on the “best” diet for healt
 # Methodology
 ## Data Sources
 For this analysis, we utilized three different datasets, which were merged and cleaned to provide insights into life expectancy, nutritional intake, and the geographical context of each country. The datasets are as follows:
+
 ### Nutritional Intake Data
 This dataset is from the Food and Agriculture Organization (FAO) of the United Nations and contains information on a country’s food supply. It provides data on various food items—covering both primary and processed commodities that are potentially available for human consumption—and details their sources and utilization.
 
@@ -246,6 +247,7 @@ The dataset contains 32,910 rows and 15 columns and is formatted in long format.
 The dataset titled “Life Expectancy from 2000 to 2021” from the World health Organisation provides data on life expectancy trends across countries. It contains 24420 rows and 34 columns and spans the years from 2000 to 2021. The data is structured in a long format.
 
 Key variables that we used from this dataset:
+
 >* Country: The country for which life expectancy data is recorded. 
 >* Year: The year corresponding to the life expectancy data. 
 >* Life Expectancy: The average life expectancy at birth for each country in years. 
@@ -269,6 +271,7 @@ The three datasets were merged using the country variable as the key. This allow
 
 ### Data Manipulation
 For our analysis, we categorized countries into three groups based on life expectancy:
+
 >* Top 10 countries with the highest life expectancy.
 >* Middle 10 countries with life expectancy in the middle range.
 >* Bottom 10 countries with the lowest life expectancy.
@@ -334,7 +337,7 @@ Within countries, there may also be significant regional differences in nutritio
 
 Additionally, while this report primarily focuses on the role of nutrition, it is essential to note that non-dietary factors—such as healthcare access, education, and socio-economic conditions—also play a significant role in influencing life expectancy (as discussed in the Theoretical Focus section).
 
-### Use of Geerative AI
+### Use of Generative AI
 We used ChatGPT as our Generative AI tool during our work on R tasks, which presented both opportunities and challenges. One challenge we faced was handling data effectively, especially when we wanted to use specific methods introduced during the course, such as data wrangling with dplyr or visualizations with ggplot2. While it was up to us to decide how to approach the tasks, we preferred to follow these methods to maintain consistency with what we had learned. However, when we asked ChatGPT for assistance, it sometimes suggested alternative approaches using different packages or methods, which did not always align with our chosen way of working. This required us to manually adjust the AI’s suggestions to match our goals.
 
 An important aspect of using ChatGPT was the need to clearly and explicitly state our objectives. For example, when we asked for help with data preprocessing, ChatGPT often didn’t fully grasp the context or the specific transformations we needed. As a result, it occasionally generated solutions that weren’t quite suited to our dataset or analysis. We had to carefully communicate exactly what we wanted to achieve and refine the questions we posed to get more relevant output.
@@ -343,9 +346,10 @@ That said, ChatGPT proved useful for simpler tasks, such as generating code for 
 
 # Results and Discussion
 In the following discussion, we will explore the key findings from the analysis and compare them with existing literature on nutrition and longevity. We will examine how caloric intake, macronutrient consumption, and the balance of plant- and animal-based proteins influence life expectancy across different countries. Additionally, we will discuss the disparities observed between high and low life expectancy countries.
+
 ## ___RQ1: How does life expectancy and caloric intake compare geographically across countries?___</br>
 
-### Geographical Patterns of Life Expectancy and Nutritional Intake
+### Geographical Patterns of Life Expectancy and Nutritional Intake [Chapter of Choice]
 ```{r Countries by Mean Life Expectancy (2021), warning=FALSE, echo=FALSE}
 
 # Plot 1 - Life expectancy per country in each group
