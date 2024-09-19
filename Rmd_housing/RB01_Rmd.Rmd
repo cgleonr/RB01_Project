@@ -441,6 +441,46 @@ The gap between the middle and bottom countries is relatively large. While both 
 
 This plot shows that life expectancy has risen globally over the past decade, the effects of external factors such as the COVID-19 pandemic have caused noticeable disruptions, particularly in less developed nations. These trends highlight the importance of addressing healthcare inequities, especially in the wake of global crises.
 
+### Global Trend in Life Expectancy Over Time {.tabset}
+
+#### Linear Model Representation
+```{r LM Plot, echo=FALSE, message=FALSE, warning=FALSE}
+# New df for model
+model_df <- df %>%
+  select(Country, Year, Life.Expectancy)
+
+# Outlier Cleaning
+Q1 <- quantile(model_df$Life.Expectancy, 0.25, na.rm = TRUE)
+Q3 <- quantile(model_df$Life.Expectancy, 0.75, na.rm = TRUE)
+IQR_value <- Q3 - Q1
+
+low_bound <- Q1 - 1.5 * IQR_value
+hi_bound <- Q1 + 1.5 * IQR_value
+
+model_df_clean <- model_df %>%
+  filter(Life.Expectancy >= low_bound & Life.Expectancy <= hi_bound)
+
+model <- lm(model_df_clean$Life.Expectancy ~ model_df_clean$Year)
+
+ggplot(model_df_clean, aes(x = Year, y = Life.Expectancy)) +
+  geom_point(alpha = 0.6, color=color_mid) +
+  geom_smooth(method = "lm", se = TRUE, color = color_bot, linetype = "solid") +
+  labs(title = "Global Trend in Life Expectancy Over Time",
+       x = "Year",
+       y = "Life Expectancy (Years)") +
+  theme_minimal()
+
+```
+
+#### Model Summary
+```{r LM Summary, echo=FALSE, message=FALSE, warning=FALSE}
+summary(model)
+```
+###
+In this plot we can see that life expectancy on a global level has been more or less consistently rising in the past years. Although the COVID-19 pandemic did affect life expectancy in most countries, we treated those values as outliers, as this data cannot be concluded to be a consistent factor in longevity on a worldwide level.
+
+The summary of the model shows us that the rate of increase is about `0.11138` years of life expectancy every year that passes, if analyzed as a linear trend, with a non-insignificant p-value. This means that, on average, every year that goes by, humanity is expected to live around one month and 10 days longer than they were previously.
+
 ### Overall Caloric Intake and its Relationship with Life Expectancy
 ```{r Change in Caloric Intake 2010-2021, echo=FALSE, warning=FALSE}
 int_plot_caloric_intake <- ggplot(focus_df, aes(x = Year, y = Total.Calories, colour = Category, group = Country, text = Country)) +
